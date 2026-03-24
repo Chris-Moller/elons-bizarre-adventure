@@ -1,0 +1,320 @@
+{
+  "quality": "full",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Build turn-based Mars strategy game with Phaser 3 + React",
+      "description": "Scaffold the project from the official Phaser 3 React TypeScript template, then implement: (1) random tile map generation with ~10% Rocks resources, (2) Elon Musk unit with click-to-move mechanics, (3) turn-based movement system with 3 moves per turn, (4) resource gathering when on Rocks tiles, (5) React HUD showing turn count, rocks inventory, and action buttons, (6) Mars-themed visual design using Phaser Graphics API.",
+      "acceptance_criteria": "1. A tiled map (20x15) is randomly generated at game start with distinct colored tiles.\n2. Approximately 10% of tiles contain a visible 'Rocks' resource.\n3. An Elon Musk unit marker is placed on the map at start.\n4. Clicking an adjacent tile moves Elon to that tile (4-directional, costs 1 move point).\n5. Elon has 3 moves per turn; moves remaining is displayed in the HUD.\n6. A 'Gather Rocks' button appears when Elon is on a Rocks tile; clicking it removes the resource and increments inventory.\n7. An 'End Turn' button advances the turn and resets move points.\n8. Turn counter and rocks inventory are displayed in the HUD.\n9. The game renders with a Mars-themed color palette (rust reds, amber accents, dark backgrounds).",
+      "claudeMd": "# Elon's Bizarre Adventure — Implementation Guide\n\nYou are building a turn-based Mars strategy game using Phaser 3 + React + TypeScript + Vite.\n\n## Project Setup\n\nScaffold from the official Phaser 3 React TypeScript template. Run `init.sh` first — it clones the template repo and installs dependencies.\n\nAfter init.sh runs, you'll have the standard template structure. Build on top of it.\n\n## Tech Stack\n- **Phaser 3.90.0**: Game engine — handles tile rendering, camera, input, sprites\n- **React 19**: HUD overlay (turn counter, resource display, action buttons)\n- **TypeScript 5.7**: Full type safety\n- **Vite 6**: Bundler with HMR\n\n## Design Direction: \"Dusty Mars Outpost\"\n\nGritty, industrial sci-fi. NOT clean/minimal/pastel.\n\n### Color Palette (use these exact values)\n```\nBackground (deep):    #1a0d07  (dark Martian soil)\nBackground (panel):   #2d1810  (dark rust)\nTerrain base:         #c4956a  (rusty sand)\nTerrain variation:    add ±10% brightness noise per tile\nRocks resource:       #708090  (slate gray) with #5a6a7a border\nEmpty tile border:    #8b6914  (dark amber, subtle)\nElon unit:            #fda600  (bright amber) circle with #e77d11 border\nAccent primary:       #e77d11  (amber)\nAccent secondary:     #1ba2aa  (tech teal)\nText primary:         #e8ddd3  (pale dust)\nText secondary:       #a89580  (muted sand)\nHUD background:       #2d1810cc  (semi-transparent dark rust)\nButton bg:            #3d2215\nButton hover:         #4d3225\nButton active accent: #e77d11\n```\n\n### Typography\nLoad from Google Fonts in index.html:\n- Display/HUD: `'Share Tech Mono', monospace`\n- Body/tooltips: `'Exo 2', sans-serif`\n\nAdd to index.html `<head>`:\n```html\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700&family=Share+Tech+Mono&display=swap\" rel=\"stylesheet\">\n```\n\n## Architecture\n\n### Phaser Scenes\n- **Boot**: Minimal setup, transition to Game\n- **Game**: Main scene — tile map, unit, input handling, turn logic\n\n### File Structure\n```\nsrc/\n├── main.tsx                    # React entry (from template)\n├── App.tsx                     # Wraps PhaserGame + HUD\n├── PhaserGame.tsx              # Bridge (from template)\n├── game/\n│   ├── main.ts                 # Phaser config\n│   ├── EventBus.ts             # Event bus (from template)\n│   ├── scenes/\n│   │   ├── Boot.ts             # Boot scene\n│   │   └── Game.ts             # Main game scene (CORE FILE)\n│   ├── map/\n│   │   ├── MapGenerator.ts     # Random map gen\n│   │   ├── TileRenderer.ts     # Renders tiles with Phaser Graphics\n│   │   └── types.ts            # Tile/Map types\n│   ├── units/\n│   │   └── Unit.ts             # Unit class\n│   └── systems/\n│       └── TurnSystem.ts       # Turn management\n├── ui/\n│   ├── HUD.tsx                 # Main HUD component\n│   ├── TopBar.tsx              # Turn + resources\n│   └── ActionBar.tsx           # Buttons\n└── styles/\n    └── hud.css                 # HUD styles\n```\n\n### Game State (lives in GameScene)\n```typescript\ninterface GameState {\n  map: Tile[][];           // 20x15 grid\n  unit: { x: number; y: number; rocks: number; movesPerTurn: number };\n  turn: number;\n  movesRemaining: number;\n  phase: 'move' | 'action' | 'idle';\n}\n\ninterface Tile {\n  x: number;\n  y: number;\n  type: 'empty' | 'rocks';\n  hasResource: boolean;   // true if rocks not yet gathered\n}\n```\n\n### Map Generation (MapGenerator.ts)\n- Grid: 20 columns × 15 rows\n- Tile size: 48×48 pixels (good balance of visibility and map coverage)\n- ~10% of tiles randomly set as 'rocks' (type: 'rocks', hasResource: true)\n- Elon placed near center on a non-resource tile\n- Use `Math.random()` — no seed library needed for MVP\n\n### Tile Rendering (TileRenderer.ts)\nUse `Phaser.GameObjects.Graphics` to draw colored rectangles:\n- Each tile: filled rectangle with 1px border\n- Terrain tiles: base color `#c4956a` with ±15 brightness variation per tile (computed once at generation)\n- Rocks tiles: gray `#708090` rectangle overlay centered in tile (smaller than full tile, like 70% size)\n- Grid lines: thin dark amber `#8b6914` borders\n- Use `setInteractive()` on tile areas for click detection\n\nFor click detection, create invisible Phaser rectangles over each tile using `this.add.rectangle()` with `.setInteractive()`. Listen for `pointerdown` events.\n\n### Unit Rendering (Unit.ts)\n- Elon rendered as a filled circle (amber `#fda600`) with border (`#e77d11`), centered in tile\n- When moving: tween animation (Phaser tween, 200ms) sliding to new tile\n- Movement highlight: adjacent movable tiles get a subtle glow/border highlight on hover\n\n### Movement System\n1. Click on adjacent tile (up/down/left/right — NOT diagonal)\n2. Check: is tile adjacent? Are moves remaining > 0?\n3. If valid: tween unit to new position, decrement movesRemaining\n4. Emit state update to React via EventBus\n5. Highlight adjacent tiles after move completes\n\n### Turn System (TurnSystem.ts)\n```typescript\nclass TurnSystem {\n  turn: number = 1;\n  movesRemaining: number;\n  movesPerTurn: number = 3;\n\n  startTurn(): void { this.movesRemaining = this.movesPerTurn; }\n  useMove(): boolean { if (this.movesRemaining > 0) { this.movesRemaining--; return true; } return false; }\n  endTurn(): void { this.turn++; this.startTurn(); }\n}\n```\n\n### Resource Gathering\n- When Elon is on a tile with `hasResource: true`:\n  - React shows 'Gather Rocks' button (via EventBus state update)\n  - Click button → EventBus emits 'gather-rocks' → GameScene handler:\n    1. Check movesRemaining > 0\n    2. Set tile.hasResource = false\n    3. Increment unit.rocks\n    4. Re-render tile (remove gray overlay)\n    5. Decrement movesRemaining\n    6. Emit state update\n\n### EventBus Communication\n```typescript\n// Phaser → React (after every state change)\nEventBus.emit('game-state-updated', {\n  turn: this.turnSystem.turn,\n  movesRemaining: this.turnSystem.movesRemaining,\n  rocks: this.unit.rocks,\n  canGather: this.canGatherAtCurrentPosition(),\n  unitPosition: { x: this.unit.gridX, y: this.unit.gridY }\n});\n\n// React → Phaser\nEventBus.emit('end-turn');      // End Turn button\nEventBus.emit('gather-rocks');  // Gather button\n```\n\n### React HUD Components\n\n**HUD.tsx**: Wrapper, listens to EventBus for state updates, passes to children.\n\n**TopBar.tsx**: Fixed top bar\n- Left: \"TURN {n}\" in Share Tech Mono\n- Center: \"MOVES: {n}/{max}\" with move pips (filled/empty circles)\n- Right: Rock icon + count\n\n**ActionBar.tsx**: Fixed bottom bar\n- \"GATHER ROCKS\" button (only visible when canGather is true)\n- \"END TURN\" button (always visible)\n- Buttons styled with Mars palette: dark rust background, amber border on hover, amber text\n\n**hud.css**: Style the HUD panels\n- Use `position: absolute` over the Phaser canvas\n- `pointer-events: none` on container, `pointer-events: auto` on interactive elements\n- Semi-transparent dark backgrounds (`#2d1810cc`)\n- All text in specified fonts\n- No Tailwind — plain CSS is fine for this scope, avoids an extra dependency\n\n### Camera\n- Set Phaser camera bounds to map size (20*48 × 15*48 = 960×720)\n- If viewport is smaller than map: enable camera drag (middle mouse or arrow keys)\n- Center camera on Elon at game start\n\n### Phaser Config (game/main.ts)\n```typescript\nconst config: Phaser.Types.Core.GameConfig = {\n  type: Phaser.AUTO,\n  width: 960,\n  height: 720,\n  parent: 'game-container',\n  backgroundColor: '#1a0d07',\n  scene: [Boot, Game],\n  scale: {\n    mode: Phaser.Scale.FIT,\n    autoCenter: Phaser.Scale.CENTER_BOTH,\n  },\n};\n```\n\n## Gotchas\n- The template's `PhaserGame.tsx` expects scenes to emit `'current-scene-ready'` on the EventBus when they're ready. Make sure GameScene does this in `create()`.\n- Phaser's coordinate system: (0,0) is top-left. Grid position (gx, gy) maps to pixel position (gx * TILE_SIZE, gy * TILE_SIZE).\n- When using `this.add.rectangle()` for interactive tiles, set origin to (0, 0) so the rectangle aligns with the grid.\n- The template puts the Phaser game in a `div#game-container`. The React HUD must be positioned absolutely over this container.\n- Don't use `Phaser.Tilemaps` (the built-in tilemap system) — it requires Tiled JSON data. Instead, use the Graphics API to draw rectangles directly. This is simpler for procedural generation.\n- Phaser's `this.add.graphics()` creates a single graphics object. For interactive tiles, you need separate game objects — use `this.add.rectangle()` for each tile.\n\n## Build & Run\n- `npm run dev` — starts Vite dev server (default port 8080)\n- `npm run build` — production build to `dist/`\n\n## Parallel Sub-agents\nUse the Task tool to spawn parallel sub-agents for faster implementation:\n- **Sub-agent 1 (Game Engine)**: Implement map generation, tile rendering, unit, movement system, turn system, resource gathering — everything in `src/game/`\n- **Sub-agent 2 (UI Layer)**: Implement HUD components, styling, EventBus listeners — everything in `src/ui/` and `src/styles/`, plus modifications to `App.tsx`\n\nBoth agents need to agree on the EventBus contract (defined above). The Game Engine agent should emit events matching the contract; the UI agent should listen for them.\n\nAfter both complete, wire them together in `App.tsx` — the HUD component renders alongside the PhaserGame component.",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Project scaffolding from Phaser 3 React TS template with Mars theme setup",
+          "steps": [
+            "Run init.sh to clone template and install dependencies",
+            "Update index.html to add Google Fonts (Share Tech Mono, Exo 2) and set page title to 'Elon's Bizarre Adventure'",
+            "Update public/style.css with Mars color palette (dark background #1a0d07, text colors)",
+            "Verify npm run dev starts without errors"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t2",
+          "description": "Type definitions for game state, tiles, and units",
+          "steps": [
+            "Create src/game/map/types.ts with Tile, TileMap, GameState, and Unit interfaces",
+            "Tile type includes: x, y, type ('empty'|'rocks'), hasResource boolean, colorVariation number",
+            "Unit type includes: gridX, gridY, rocks count, movesPerTurn",
+            "GameState includes: map (Tile[][]), unit, turn number, movesRemaining, phase"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t3",
+          "description": "Random map generation producing a 20x15 grid with ~10% Rocks tiles",
+          "steps": [
+            "Create src/game/map/MapGenerator.ts with a generateMap(cols: 20, rows: 15) function",
+            "Each tile gets a random colorVariation offset (±15 brightness) stored at generation time",
+            "Approximately 10% of tiles randomly assigned type 'rocks' with hasResource: true",
+            "Function returns Tile[][] and a spawn position (near center, non-resource tile)",
+            "Verify by logging: count rocks tiles, confirm ~10% ratio, confirm spawn is valid"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t4",
+          "description": "Tile rendering with Mars-themed colors using Phaser Graphics API",
+          "steps": [
+            "Create src/game/map/TileRenderer.ts that takes a Phaser scene and Tile[][] as input",
+            "Render each tile as a 48x48 rectangle: empty tiles use #c4956a base with per-tile color variation",
+            "Rocks tiles render with terrain base PLUS a smaller gray (#708090) rectangle overlay (~70% tile size) centered in tile",
+            "Grid lines rendered as 1px dark amber (#8b6914) borders around each tile",
+            "Create interactive Phaser rectangles over each tile with setInteractive() for click detection",
+            "Verify: all tiles render, rocks tiles visually distinct, grid lines visible"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t5",
+          "description": "Elon Musk unit rendered as amber circle with movement capability",
+          "steps": [
+            "Create src/game/units/Unit.ts class wrapping a Phaser circle game object",
+            "Render unit as filled circle (radius ~18px) with amber #fda600 fill and #e77d11 border, centered in tile",
+            "Unit tracks gridX, gridY, rocks count",
+            "Implement moveTo(x, y) method that tweens the circle to the new tile position (200ms duration)",
+            "Verify: unit appears on starting tile, circle is clearly visible against terrain"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t6",
+          "description": "Turn system with 3 moves per turn, end-turn cycling",
+          "steps": [
+            "Create src/game/systems/TurnSystem.ts class",
+            "Tracks: turn number (starts at 1), movesRemaining, movesPerTurn (3)",
+            "startTurn() resets movesRemaining to movesPerTurn",
+            "useMove() decrements movesRemaining, returns false if no moves left",
+            "endTurn() increments turn number and calls startTurn()",
+            "Verify: turn starts with 3 moves, moves decrement correctly, end turn resets"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t7",
+          "description": "Click-to-move: clicking adjacent tile moves Elon (4-directional, costs 1 move)",
+          "steps": [
+            "In GameScene, listen for pointerdown on tile rectangles",
+            "On click: check if clicked tile is orthogonally adjacent to unit position",
+            "Check if movesRemaining > 0 via TurnSystem",
+            "If valid: call unit.moveTo(), call turnSystem.useMove(), update highlighted tiles",
+            "If invalid (not adjacent or no moves): show brief visual feedback (red flash or ignore)",
+            "Highlight movable adjacent tiles with subtle amber glow/border when it's player's move phase",
+            "After each move, emit state update via EventBus",
+            "Verify: can move in all 4 directions, cannot move diagonally, cannot move with 0 moves, cannot move to non-adjacent tile"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t8",
+          "description": "Resource gathering: collect Rocks from resource tiles via explicit action",
+          "steps": [
+            "When unit is on a tile with hasResource: true, set canGather flag in state",
+            "Listen for 'gather-rocks' event on EventBus (fired by React button)",
+            "On gather: verify unit is on resource tile AND movesRemaining > 0",
+            "Set tile.hasResource = false, increment unit.rocks, decrement movesRemaining",
+            "Re-render the tile (remove gray rocks overlay) using TileRenderer",
+            "Emit updated state via EventBus",
+            "Verify: gather works, resource disappears from tile, inventory increments, costs 1 move"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t9",
+          "description": "GameScene wiring: Boot scene, Game scene initialization, EventBus integration",
+          "steps": [
+            "Create src/game/scenes/Boot.ts — minimal scene that transitions to Game",
+            "Create src/game/scenes/Game.ts — main scene using MapGenerator, TileRenderer, Unit, TurnSystem",
+            "In Game.create(): generate map, render tiles, create unit, start turn, emit initial state, emit 'current-scene-ready'",
+            "Listen for 'end-turn' EventBus event → call turnSystem.endTurn(), emit state update",
+            "Listen for 'gather-rocks' EventBus event → execute gather logic",
+            "Update src/game/main.ts with correct Phaser config (960x720, scale FIT, scenes array)",
+            "Verify: game boots, transitions to GameScene, map visible, unit placed, state emitted"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t10",
+          "description": "React HUD: TopBar with turn/moves/rocks, ActionBar with End Turn and Gather buttons",
+          "steps": [
+            "Create src/ui/TopBar.tsx: displays 'TURN {n}' (left), 'MOVES: {n}/3' with pip indicators (center), rock icon + count (right)",
+            "Create src/ui/ActionBar.tsx: 'END TURN' button (always), 'GATHER ROCKS' button (only when canGather)",
+            "Create src/ui/HUD.tsx: wraps TopBar + ActionBar, subscribes to EventBus 'game-state-updated' event",
+            "HUD manages state via useState, updates on every EventBus event",
+            "ActionBar buttons emit 'end-turn' and 'gather-rocks' on EventBus when clicked",
+            "Create src/styles/hud.css with Mars-themed styling: semi-transparent dark panels, amber accents, Share Tech Mono font",
+            "HUD positioned absolute over game canvas with pointer-events: none on container, auto on buttons",
+            "Verify: HUD displays over game, turn counter works, moves update on movement, gather button appears/disappears correctly, rocks count increments on gather"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t11",
+          "description": "App.tsx integration: PhaserGame + HUD rendered together",
+          "steps": [
+            "Update src/App.tsx to render PhaserGame component and HUD component side by side",
+            "Wrap in a container div with position: relative for HUD absolute positioning",
+            "Remove any template demo UI that isn't needed",
+            "Verify: full game renders with HUD overlay, all interactions work end-to-end"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t12",
+          "description": "Camera setup: bounds set to map, centered on unit, optional pan",
+          "steps": [
+            "Set camera bounds to map dimensions (960 x 720 pixels)",
+            "Center camera on Elon unit at game start",
+            "If needed, enable camera drag or keyboard arrow pan for navigation",
+            "Verify: map fills viewport, camera doesn't go out of bounds"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t13",
+          "description": "End-to-end game loop: move, gather, end turn, repeat across multiple turns",
+          "steps": [
+            "Start game: verify map generated with visible tiles and rocks",
+            "Move Elon to an adjacent tile, verify move count decrements in HUD",
+            "Move to a Rocks tile, verify 'Gather Rocks' button appears",
+            "Click Gather, verify rock removed from map and inventory increments",
+            "Click End Turn, verify turn counter increments and moves reset to 3",
+            "Repeat for another turn to confirm cycle works",
+            "Verify npm run build succeeds without errors"
+          ],
+          "passes": false
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "No unused template code remaining — demo scenes, example UI removed",
+          "steps": [
+            "Check for any template demo scenes (Preloader, MainMenu, GameOver) that aren't part of the game",
+            "Check for template example React components that aren't part of the game HUD",
+            "Check for unused imports in all files"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q2",
+          "description": "Type safety — no 'any' types, all game state properly typed",
+          "steps": [
+            "Search for 'any' type usage across all .ts and .tsx files",
+            "Verify GameState, Tile, Unit interfaces are used consistently",
+            "Check EventBus emit/listen calls use typed payloads"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q3",
+          "description": "Consistent color palette — all colors match the spec, no hardcoded values outside constants",
+          "steps": [
+            "Check that colors are defined as constants (not duplicated as magic strings)",
+            "Verify terrain, rocks, unit, HUD all use the specified hex values",
+            "Check no default Phaser blue/white colors leaked through"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q4",
+          "description": "Clean separation of concerns — game logic in Phaser, UI in React, communication via EventBus only",
+          "steps": [
+            "Verify React components don't directly access Phaser objects",
+            "Verify Phaser scenes don't manipulate DOM or React state",
+            "Check all cross-boundary communication goes through EventBus"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q5",
+          "description": "No over-engineering — minimal code, no unnecessary abstractions for a single-unit game",
+          "steps": [
+            "Check that classes/functions are proportional to their responsibility",
+            "No unnecessary factory patterns, dependency injection, or indirection",
+            "Game logic is straightforward and readable without extensive comments"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q6",
+          "description": "Map generation produces correct distribution — ~10% rocks, no resource at spawn",
+          "steps": [
+            "Verify the random generation produces approximately 10% rocks tiles (8-12% acceptable range)",
+            "Verify the unit spawn position is never on a rocks tile",
+            "Verify map dimensions are 20x15"
+          ],
+          "passes": false
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": "npm run build",
+    "runCommand": "npm run dev",
+    "readySignal": "Local:|localhost|ready|VITE",
+    "appType": "web",
+    "port": 8080,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Game loads with a visible 20x15 tiled map with Mars-themed colors",
+        "steps": [
+          "Open browser to http://localhost:8080",
+          "Verify a tile grid is visible with rusty sand colored terrain tiles",
+          "Count approximately 10% of tiles showing gray rocks overlays",
+          "Verify dark Mars-themed background color"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v2",
+        "description": "Elon unit is visible and can be moved by clicking adjacent tiles",
+        "steps": [
+          "Verify a bright amber circle (Elon) is visible on the map",
+          "Click an orthogonally adjacent tile",
+          "Verify Elon moves to the clicked tile with a smooth animation",
+          "Verify the HUD moves counter decrements from 3 to 2"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v3",
+        "description": "Turn system works: moves are limited, End Turn resets them",
+        "steps": [
+          "Make 3 moves to exhaust movement points",
+          "Verify clicking a 4th adjacent tile does NOT move Elon",
+          "Click 'End Turn' button in the HUD",
+          "Verify turn counter increments and moves reset to 3"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v4",
+        "description": "Resource gathering: Rocks can be collected from resource tiles",
+        "steps": [
+          "Move Elon to a tile containing Rocks (gray overlay visible)",
+          "Verify 'Gather Rocks' button appears in the HUD",
+          "Click 'Gather Rocks'",
+          "Verify the gray rocks overlay disappears from the tile",
+          "Verify the rocks inventory counter in the HUD increments"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v5",
+        "description": "HUD displays correctly with Mars theme: turn counter, moves, rocks, buttons",
+        "steps": [
+          "Verify top bar shows turn number, moves remaining with visual pips, and rocks count",
+          "Verify bottom bar shows 'End Turn' button",
+          "Verify HUD uses Mars color palette (dark panels, amber accents, Share Tech Mono font)",
+          "Verify HUD does not block game interaction (clicks pass through non-interactive areas)"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v6",
+        "description": "Full game loop: play through multiple turns with movement and gathering",
+        "steps": [
+          "Start fresh game",
+          "Turn 1: Move to a rocks tile, gather rocks, end turn",
+          "Turn 2: Move away, move to another rocks tile, gather, end turn",
+          "Verify turn counter shows 3, rocks inventory shows 2",
+          "Verify previously gathered tiles no longer show rocks overlay"
+        ],
+        "passes": false
+      }
+    ]
+  }
+}
