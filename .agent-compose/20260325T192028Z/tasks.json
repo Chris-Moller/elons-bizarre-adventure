@@ -18,7 +18,7 @@
             "Add marsThronePlaced: false to init() reset block",
             "Verify state object has both new fields"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t2",
@@ -28,7 +28,7 @@
             "Add callEarth() function: set state.contactedEarth = true, addLog with message, refreshView()",
             "Verify callEarth sets contactedEarth to true"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t3",
@@ -40,7 +40,7 @@
             "Add hotkey row <tr><td><kbd>L</kbd></td><td>Call Earth</td></tr> to hotkey table",
             "In updateUI(), add call-earth-btn enable/disable based on canCallEarth()"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t4",
@@ -51,7 +51,7 @@
             "Verify it returns false when rocks are 0 or energy is 0",
             "Verify it returns false when marsThronePlaced is true"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t5",
@@ -68,7 +68,7 @@
             "Set state.gameOver = true",
             "Call refreshView()"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t6",
@@ -80,7 +80,7 @@
             "Add hotkey row for M / Build Mars Throne in hotkey table",
             "In updateUI(), add build-throne-btn enable/disable based on canBuildMarsThrone()"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t7",
@@ -90,7 +90,7 @@
             "Add 'mars_throne' case in drawStructure() dispatch",
             "Verify the visual renders within the 40x40 tile bounds"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t8",
@@ -99,7 +99,7 @@
             "Add 'mars_throne' case to updateTileInfo() structure text block, displaying 'Mars Throne'",
             "Verify clicking on Mars Throne tile shows correct info"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t9",
@@ -108,7 +108,7 @@
             "Add .log-entry.victory CSS rule in style.css with gold color (#FFD700), bold text, optional text-shadow",
             "Verify victory log entries appear styled differently from other logs"
           ],
-          "passes": false
+          "passes": true
         }
       ],
       "quality_checklist": [
@@ -119,7 +119,7 @@
             "Grep for contactedEarth in game.js, verify exactly 2 initialization sites (state + init)",
             "Grep for marsThronePlaced in game.js, verify exactly 2 initialization sites"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q2",
@@ -128,7 +128,7 @@
             "Read canBuildMarsThrone, verify rocks >= 1 AND getTotalHovelEnergy() >= 1 checks exist",
             "Verify marsThronePlaced check prevents double-build"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q3",
@@ -137,7 +137,7 @@
             "Verify rocks are set to 0 (not decremented by a fixed amount)",
             "Verify all hovels' energy is set to 0 (iterate structures, not drain a fixed amount)"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q4",
@@ -147,7 +147,7 @@
             "Check function naming follows camelCase pattern: canBuildX, buildX, drawX",
             "Check indentation matches 4 spaces used elsewhere"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q5",
@@ -157,7 +157,7 @@
             "Verify build-throne-btn is disabled when canBuildMarsThrone() is false",
             "Verify no button is left permanently enabled or disabled"
           ],
-          "passes": false
+          "passes": true
         }
       ]
     }
