@@ -58,3 +58,9 @@
 - **Summary**: Consolidated 6 repeated button show/hide/disable blocks in updateUI() into a data-driven array + loop, reducing 38 lines to 18 while preserving identical behavior.
 - **Tests run**: no — no automated test suite exists; verified JS syntax with node --check
 - **Outcome**: success
+
+## reviewer — 2026-03-25T20:00:00Z
+- **Summary**: clean — no critical issues found across code quality, error handling, and test coverage
+- **quality_checklist**: 4 items verified (q1, q2, q3, q4 — all pass)
+- **Reviews**: code quality (1 issue investigated: AC3 movesLeft concern is spec wording imprecision, not a code bug — gatherResource() is a free action that doesn't consume moves), error handling (clean), test coverage (adequate — no test infra project-wide)
+- **Outcome**: success / exit_signal: true
