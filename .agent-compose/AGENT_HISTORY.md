@@ -34,3 +34,10 @@
 - **Summary**: issues fixed — added energy clamping in processSubparBatteryExplosions; after any battery explodes, all rock hovels have their energy clamped to getHovelCapacity() with state.resources.energy adjusted
 - **quality_checklist**: 5 items verified (q1, q2, q3, q4, q5 — all pass)
 - **Outcome**: success / exit_signal: true
+
+## conflict-resolver — 2026-03-25T16:49:26Z
+
+- **Conflict**: game.js (3 hunks: dust storm logic vs battery explosion logic, scheduleNextStorm/processDustStorms missing from branch, event listeners with gameOver guards vs battery button), style.css (1 hunk: .storm style vs .explosion style)
+- **Resolution**: game.js — kept both dust storm and battery explosion code, preserved gameOver guards on event listeners and added battery button with same guard pattern; style.css — kept both .storm and .explosion CSS rules
+- **Tests run**: none found
+- **Outcome**: success
