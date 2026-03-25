@@ -64,3 +64,10 @@
 - **quality_checklist**: 5 items verified (q1, q2, q3, q4, q5 — all pass)
 - **Reviews**: code quality (clean — all 8 acceptance criteria satisfied, conventions followed), error handling (clean — synchronous codebase, guard clauses consistent), test coverage (adequate — no test infra project-wide, consistent with all prior features)
 - **Outcome**: success / exit_signal: true
+
+## conflict-resolver — 2026-03-25T19:37:47Z
+
+- **Conflict**: game.js (4 conflict regions), index.html (2 conflict regions) — upstream added Call Earth dialog features (commDishesUsedThisTurn, callEarthDialogOpen, close-call-earth-dialog listener, 📡 emoji on button), branch added Mars Throne feature (marsThronePlaced state, build-throne-btn UI/listener/hotkey, canBuildMarsThrone)
+- **Resolution**: Kept both features — merged state properties (commDishesUsedThisTurn + callEarthDialogOpen from HEAD, marsThronePlaced from incoming); kept Call Earth button with 📡 emoji from HEAD; added Mars Throne button, listener, hotkey entry, and updateUI block from incoming; kept close-call-earth-dialog listener from HEAD alongside build-throne-btn listener
+- **Tests run**: none found — no automated test suite exists
+- **Outcome**: success
