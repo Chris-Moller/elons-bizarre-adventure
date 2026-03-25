@@ -835,7 +835,6 @@
         document.getElementById("health-max").textContent = unit.maxHealth;
         document.getElementById("rocks-count").textContent = state.resources.rocks;
         document.getElementById("energy-count").textContent = getTotalHovelEnergy();
-        document.getElementById("food-count").textContent = state.resources.food;
 
         // Lifespan display
         var lifespanEl = document.getElementById("unit-lifespan");
@@ -857,7 +856,6 @@
             ["build-solar-btn",    canBuildSolarPanel()],
             ["build-battery-btn",  canBuildSubparBattery()],
             ["build-rocktimus-btn", canBuildRocktimus()],
-            ["build-greenhouse-btn", canBuildGreenhouse()],
             ["build-comm-dish-btn", canBuildCommDish()]
         ];
         var anyVisible = false;
@@ -1497,7 +1495,7 @@
         if (count > 0) {
             var produced = count * 3;
             state.resources.food += produced;
-            addLog("Greenhouses produced " + produced + " Food! (Total: " + state.resources.food + ")", "energy");
+            // Greenhouse log suppressed from UI
         }
     }
 
@@ -1811,10 +1809,6 @@
         if (state.gameOver) return;
         buildRocktimus();
     });
-    document.getElementById("build-greenhouse-btn").addEventListener("click", function () {
-        if (state.gameOver) return;
-        buildGreenhouse();
-    });
     document.getElementById("build-comm-dish-btn").addEventListener("click", function () {
         if (state.gameOver) return;
         buildCommDish();
@@ -1887,7 +1881,6 @@
                 buildRocktimus();
                 return;
             case "h":
-                buildGreenhouse();
                 return;
             case "c":
                 buildCommDish();
