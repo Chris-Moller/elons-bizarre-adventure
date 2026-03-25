@@ -1,0 +1,237 @@
+{
+  "quality": "full",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Add Food resource and Greenhouse building",
+      "description": "Introduce Food as a new resource type tracked in state.resources and displayed in the resource HUD. Add a Greenhouse building that costs 10 Rocks + 5 Energy (deducted from hovels), can be built by any unit (Elon or Rocktimus) on an empty tile, and generates 3 Food per turn during end-of-turn processing. The Greenhouse has a distinct green glass-panel visual on the canvas and a labeled sprite. Wire up all UI: action button, hotkey, tile info display, and hotkey modal entry.",
+      "acceptance_criteria": "1. Food resource exists in state.resources and is displayed in the resource HUD alongside Rocks and Energy.\n2. A 'Build Greenhouse' action button appears when a unit is on an empty tile and player has >= 10 Rocks and >= 5 Energy.\n3. Building deducts 10 Rocks and 5 Energy from player resources.\n4. Each Greenhouse generates 3 Food per turn in end-of-turn phase.\n5. Greenhouse has a distinct visual sprite on the canvas with a label.\n6. Food total is visible in the resource panel and updates each turn.\n7. Build action follows existing UI patterns (button visibility, disabled states, action logging, hotkey).",
+      "claudeMd": "# Project Context\n\nYou are adding a Food resource and Greenhouse building to a vanilla HTML/CSS/JS turn-based strategy game. The entire game is a single IIFE in `game.js` (~1733 lines) with `index.html` and `style.css`.\n\n## Tech Stack\n- Vanilla JavaScript (ES5/ES6 mix, no modules, no build system)\n- HTML5 Canvas for rendering\n- Static CSS\n- No tests, no package.json, no framework\n\n## Critical Conventions — MATCH EXACTLY\n\n### State\n- Resources live on `state.resources` object (currently `{ rocks: 0 }`). Add `food: 0`.\n- Structures are objects in `state.structures[]` with at minimum `{ type: string, row: number, col: number }`.\n- The `init()` function (line ~1703) resets ALL state — you MUST add `food: 0` to the reset block.\n\n### Building Pattern (follow Rock Hovel / Comm Dish exactly)\nEvery building needs ALL of these pieces:\n1. `canBuild*()` — guard function returning boolean\n2. `build*()` — action function that deducts resources, pushes to `state.structures`, calls `addLog()`, calls `refreshView()`\n3. `draw*(structure)` — canvas rendering function\n4. Entry in `drawStructure()` dispatch (if/return chain starting at line ~335)\n5. HTML button in `#action-panel` in `index.html` with `class=\"action-btn\"` and `disabled` attribute\n6. Entry in `updateUI()` actions array (line ~783) as `[\"btn-id\", canBuild*()]`\n7. Click event listener (line ~1591 area)\n8. Keyboard shortcut in the keydown handler switch statement (line ~1640 area)\n9. Entry in `updateTileInfo()` (line ~843 area) `else if` chain\n10. Hotkey table row in `index.html` `#hotkey-modal`\n\n### Energy Deduction Pattern\nThe Greenhouse costs 5 Energy. Follow the Comm Dish pattern exactly (line ~1178-1195):\n```js\nvar energyNeeded = 5;\nfor (var i = 0; i < state.structures.length && energyNeeded > 0; i++) {\n    if (state.structures[i].type !== \"rock_hovel\") continue;\n    var drain = Math.min(state.structures[i].energy, energyNeeded);\n    state.structures[i].energy -= drain;\n    energyNeeded -= drain;\n}\n```\n\n### End-of-Turn Processing\nAdd `processGreenhouses()` to `endTurn()` after `processSolarPanels()` (line ~1532). Pattern:\n```js\nfunction processGreenhouses() {\n    var count = 0;\n    for (var i = 0; i < state.structures.length; i++) {\n        if (state.structures[i].type === \"greenhouse\") count++;\n    }\n    if (count > 0) {\n        var produced = count * 3;\n        state.resources.food += produced;\n        addLog(\"Greenhouses produced \" + produced + \" Food! (Total: \" + state.resources.food + \")\", \"energy\");\n    }\n}\n```\n\n### Drawing Pattern\nThe draw function receives a structure object and uses `structure.col * TILE_SIZE` / `structure.row * TILE_SIZE` for positioning. Use `ctx` (the canvas 2D context) and `TILE_SIZE` (40px). End with a label like:\n```js\nctx.fillStyle = \"#44cc44\";\nctx.font = \"bold 5px sans-serif\";\nctx.textAlign = \"center\";\nctx.fillText(\"GRNHSE\", x + TILE_SIZE / 2, y + TILE_SIZE - 1);\n```\nDesign the Greenhouse as a green glass-panel structure — use greens (#2d8a2d, #44cc44, #66ff66 range) with a plant/leaf motif inside. Keep it visually distinct from Solar Panel (blue) and Battery (green but smaller/different shape).\n\n### Resource HUD (`index.html`)\nAdd a new `<div class=\"resource-row\">` inside `#resources-panel` after the Energy row. Use a food-related emoji (🌿 works well for a Mars farm). Pattern:\n```html\n<div class=\"resource-row\">\n    <span class=\"resource-icon\">&#x1F33F;</span>\n    <span>Food: <span id=\"food-count\">0</span></span>\n</div>\n```\n\n### Keyboard Shortcut\nUse `h` for Greenhouse (H for Greenhouse/Harvest). Add to the switch statement and the hotkey modal table.\n\n### Build Conditions\n- `canBuildGreenhouse()`: selected unit on empty tile (no structure), `state.resources.rocks >= 10`, `getTotalHovelEnergy() >= 5`\n- Both Elon and Rocktimus can build (no unit type check needed — same as Rock Hovel)\n\n### UI Update\nIn `updateUI()`, add to the resource display: `document.getElementById(\"food-count\").textContent = state.resources.food;`\nIn the actions array, add: `[\"build-greenhouse-btn\", canBuildGreenhouse()]`\n\n### Log Style\nUse `\"build\"` class for the build log entry. Use `\"energy\"` class for the per-turn food generation log.\n\n## Files to Modify\n1. `game.js` — all game logic, rendering, state changes\n2. `index.html` — resource HUD row, action button, hotkey table entry\n3. `style.css` — NO changes needed (existing `.resource-row` and `.action-btn` styles cover the new elements)\n\n## Gotchas\n- The game uses a mix of `var` and `const`/`let` — older functions use `var`, newer use `const`/`let`. Use `var` for consistency with building functions.\n- `getTotalHovelEnergy()` returns the sum of all hovel energy — use this for the >= 5 check.\n- Button text should include the cost with emoji Unicode entities: `Build Greenhouse (10 &#x1FAA8; 5 &#x26A1;)`\n- The `drawStructure()` function uses early returns for each type — add the greenhouse check before the default Rock Hovel drawing code.\n- Make sure the build button is placed in the action panel BEFORE the Comm Dish and Call Earth and Mars Throne buttons (keep those endgame actions at the bottom).\n- The init function sets `state.resources = { rocks: 0 }` — change to `{ rocks: 0, food: 0 }`.",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Add food: 0 to state.resources and init() reset",
+          "steps": [
+            "In game.js, change state.resources from { rocks: 0 } to { rocks: 0, food: 0 } in both the initial state declaration (~line 73) and the init() function (~line 1709)",
+            "Verify by searching for 'state.resources' to ensure no other reset points were missed"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t2",
+          "description": "Add Food resource row in HTML resource panel",
+          "steps": [
+            "In index.html, add a new div.resource-row with 🌿 icon and food-count span inside #resources-panel after the Energy row",
+            "Verify the HTML is well-formed and follows the exact pattern of the Rocks and Energy rows"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t3",
+          "description": "Display food count in updateUI()",
+          "steps": [
+            "In game.js updateUI(), add document.getElementById('food-count').textContent = state.resources.food after the energy-count update",
+            "Verify the element ID matches the one added in index.html"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t4",
+          "description": "Implement canBuildGreenhouse() guard function",
+          "steps": [
+            "Add canBuildGreenhouse() function that checks: no structure on unit's tile, rocks >= 10, getTotalHovelEnergy() >= 5",
+            "Verify it returns boolean and follows the pattern of canBuildCommDish()"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t5",
+          "description": "Implement buildGreenhouse() action function",
+          "steps": [
+            "Add buildGreenhouse() that calls canBuildGreenhouse() guard, deducts 10 rocks, deducts 5 energy from hovels (Comm Dish pattern), pushes greenhouse structure, logs, and refreshes",
+            "Verify energy deduction loop matches the Comm Dish pattern exactly"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t6",
+          "description": "Add Build Greenhouse button to HTML action panel",
+          "steps": [
+            "In index.html #action-panel, add button#build-greenhouse-btn with text 'Build Greenhouse (10 🪨 5 ⚡)' before the Comm Dish button",
+            "Verify it has class='action-btn' and disabled attribute"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t7",
+          "description": "Wire greenhouse button in updateUI() actions array",
+          "steps": [
+            "Add ['build-greenhouse-btn', canBuildGreenhouse()] to the actions array in updateUI()",
+            "Verify it's placed in the correct position (after build-rocktimus-btn, before build-comm-dish-btn)"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t8",
+          "description": "Add click event listener and keyboard shortcut for greenhouse",
+          "steps": [
+            "Add click event listener for build-greenhouse-btn that calls buildGreenhouse()",
+            "Add case 'h' to the keyboard switch statement that calls buildGreenhouse()",
+            "Add hotkey row to the hotkey modal table in index.html: <kbd>H</kbd> → Build Greenhouse"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t9",
+          "description": "Implement drawGreenhouse() canvas rendering",
+          "steps": [
+            "Create drawGreenhouse(structure) function with a distinct green glass-panel visual",
+            "Add dispatch entry in drawStructure() before the default Rock Hovel code",
+            "Verify the sprite is visually distinct from Solar Panel and Battery"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t10",
+          "description": "Add greenhouse to tile info display",
+          "steps": [
+            "In updateTileInfo(), add else if (tileStructure.type === 'greenhouse') { structureText = 'Greenhouse'; } to the structure type chain",
+            "Verify placement follows the existing if/else if pattern"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t11",
+          "description": "Implement processGreenhouses() end-of-turn food generation",
+          "steps": [
+            "Add processGreenhouses() function that counts greenhouses and adds 3 * count to state.resources.food with a log entry",
+            "Call processGreenhouses() in endTurn() after processSolarPanels()",
+            "Verify the log uses the 'energy' class and shows total food"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t12",
+          "description": "Verify all pieces work together end-to-end",
+          "steps": [
+            "Open the game in browser (or review all changes holistically)",
+            "Confirm food shows 0 in resource panel at start",
+            "Confirm Build Greenhouse button appears/hides correctly based on resources and tile state",
+            "Confirm building deducts correct resources",
+            "Confirm food increments by 3 per greenhouse per turn",
+            "Confirm greenhouse sprite renders on the map tile"
+          ],
+          "passes": false
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "No duplicated resource deduction logic — energy deduction uses the same pattern as Comm Dish",
+          "steps": [
+            "Search for energy deduction loops and verify the greenhouse version matches the Comm Dish pattern",
+            "Check there are no off-by-one errors in the energy drain loop"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q2",
+          "description": "All state paths include food — init reset, state declaration, and any other state reset points",
+          "steps": [
+            "Search for 'state.resources' assignments and verify food is included everywhere rocks is",
+            "Verify init() reset doesn't miss the food property"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q3",
+          "description": "UI consistency — button placement, naming, and disabled state follow existing patterns exactly",
+          "steps": [
+            "Verify the greenhouse button is positioned logically in the action panel (after Rocktimus, before Comm Dish)",
+            "Verify the button text format matches other build buttons (name + cost in emoji)",
+            "Verify the updateUI actions array order matches the HTML button order"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q4",
+          "description": "Canvas rendering is clean and visually distinct",
+          "steps": [
+            "Verify the drawGreenhouse function uses a consistent color palette that differs from Solar Panel (blue) and Battery (small green square)",
+            "Verify the label text fits within the tile and uses the standard font pattern",
+            "Check that drawStructure() dispatch is correct with early return"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q5",
+          "description": "No unused code or leftover comments — changes are minimal and focused",
+          "steps": [
+            "Review the diff for any debug code, TODO comments, or unnecessary additions",
+            "Verify no existing functionality was broken by the changes"
+          ],
+          "passes": false
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": "echo 'No build step — static HTML/CSS/JS'",
+    "runCommand": "python3 -m http.server 8080 -d /home/user/workspace-2580820c-planner-d7e32830",
+    "readySignal": "Serving HTTP",
+    "appType": "web",
+    "port": 8080,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Food resource appears in the resource HUD with initial value 0",
+        "steps": [
+          "Open the game at http://localhost:8080",
+          "Look at the sidebar resource panel",
+          "Verify a Food row with 🌿 icon shows '0'"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v2",
+        "description": "Build Greenhouse button appears when conditions are met",
+        "steps": [
+          "Accumulate >= 10 Rocks and >= 5 Energy (build hovel, wait for solar panels)",
+          "Select a unit on an empty tile",
+          "Verify 'Build Greenhouse' button is visible and enabled"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v3",
+        "description": "Building a Greenhouse deducts resources and places structure",
+        "steps": [
+          "Click 'Build Greenhouse' when enabled",
+          "Verify Rocks decreased by 10 and Energy decreased by 5",
+          "Verify a greenhouse sprite appears on the tile with a label"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v4",
+        "description": "Greenhouse generates 3 Food per turn",
+        "steps": [
+          "After building a greenhouse, click End Turn",
+          "Verify Food count increases by 3",
+          "Verify a log entry appears about food production"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v5",
+        "description": "Keyboard shortcut H builds a greenhouse",
+        "steps": [
+          "With sufficient resources on an empty tile, press H key",
+          "Verify a greenhouse is built (same as clicking the button)"
+        ],
+        "passes": false
+      }
+    ]
+  }
+}
