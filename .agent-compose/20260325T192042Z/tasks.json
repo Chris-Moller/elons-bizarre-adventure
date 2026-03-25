@@ -1,0 +1,179 @@
+{
+  "quality": "full",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Hide unusable action buttons in updateUI()",
+      "description": "Modify the updateUI() function in game.js to set style.display = 'none' on action buttons when their corresponding canBuild/canHarvest check fails, and restore display when the check passes. Add a 'No actions available' fallback message when all buttons are hidden.",
+      "acceptance_criteria": "1. Action buttons (gather, build hovel, build solar panel, build battery, build rocktimus, build comm dish) are hidden when the player lacks resources/preconditions.\n2. Buttons reappear immediately when preconditions are met (e.g., after gathering rocks).\n3. Gather button is hidden when selected unit is not on a harvestable resource or has no moves left.\n4. A contextual message or the end turn button remains visible at all times so the UI is never empty.\n5. All hotkeys continue to function as no-ops when preconditions aren't met, matching current disabled behavior.",
+      "claudeMd": "# Project Context\n\nYou are modifying a vanilla HTML/CSS/JS browser game (no framework, no build system). The entire game logic lives in `game.js` (~1400 lines). The UI is defined in `index.html` with styles in `style.css`.\n\n## What to Change\n\nModify the `updateUI()` function at **game.js:694-742**. For each action button, add a `style.display` line alongside the existing `disabled` assignment.\n\n### Pattern\n\nThe existing code looks like:\n```js\nconst gatherBtn = document.getElementById(\"gather-btn\");\ngatherBtn.disabled = !canUnitHarvest(unit);\n```\n\nChange to:\n```js\nconst gatherBtn = document.getElementById(\"gather-btn\");\nconst canGather = canUnitHarvest(unit);\ngatherBtn.disabled = !canGather;\ngatherBtn.style.display = canGather ? \"\" : \"none\";\n```\n\nApply this same pattern to all 6 action buttons:\n- `gather-btn` — uses `canUnitHarvest(unit)` (note: `canUnitHarvest` also checks `unit.movesLeft` is irrelevant — it checks tile resource and unit type; however the gather action itself in `gatherResource()` does NOT check moves. The disabled check in updateUI is just `canUnitHarvest(unit)`. Keep this as-is.)\n- `build-hovel-btn` — uses `state.resources.rocks >= 10 && !hasStructureOnTile`\n- `build-solar-btn` — uses `canBuildSolarPanel()`\n- `build-battery-btn` — uses `canBuildSubparBattery()`\n- `build-rocktimus-btn` — uses `canBuildRocktimus()`\n- `build-comm-dish-btn` — uses `canBuildCommDish()`\n\n### Fallback Message\n\nAdd a `<div id=\"no-actions-msg\">` element in `index.html` inside the `#action-panel`, right after the last button. Style it as a subtle text message like the existing `#tile-details`. In `updateUI()`, after setting all button visibility, check if ALL buttons are hidden — if so, show the message; otherwise hide it.\n\nExample HTML to add inside `#action-panel` after the last button:\n```html\n<div id=\"no-actions-msg\" class=\"no-actions-msg\" style=\"display:none\">No actions available — move to a resource or gain more resources.</div>\n```\n\nExample JS at end of button visibility block in updateUI():\n```js\nvar noActionsMsg = document.getElementById(\"no-actions-msg\");\nvar anyVisible = canGather || canHovel || canSolar || canBattery || canRock || canComm;\nnoActionsMsg.style.display = anyVisible ? \"none\" : \"\";\n```\n\n### CSS for no-actions message\n\nAdd to `style.css`:\n```css\n.no-actions-msg {\n    font-size: 0.8rem;\n    color: #aa9988;\n    padding: 8px 0;\n    text-align: center;\n}\n```\n\n## DO NOT Change\n\n- Do NOT modify the hotkey handler (keydown listener around line 1406). Hotkeys call action functions directly, and each function has its own guard clause. They are unaffected by button visibility.\n- Do NOT modify the click event listeners (lines 1378-1402). They call the action functions which have guard clauses.\n- Do NOT remove the `disabled` property assignments — keep them alongside the new `style.display` lines.\n- Do NOT modify the `canBuild*` or `canUnitHarvest` functions.\n\n## Conventions\n\n- Use `var` for variable declarations to match existing code style (the file mixes `var`/`const`/`let` — use `var` for new locals unless matching adjacent `const` usage)\n- No semicolons are inconsistently used in the file — match the surrounding code's style\n- Test by opening `index.html` in a browser — verify buttons appear/disappear as you gather resources and move around\n\n## Adjacent Sibling Margin\n\nThe CSS rule `#action-panel .action-btn + .action-btn { margin-top: 6px; }` uses the adjacent sibling combinator. When a button is `display: none`, it's removed from the flow, so the `+` combinator naturally skips it — no CSS fix needed for spacing.",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Gather button is hidden when unit cannot harvest (no resource on tile or unit type can't harvest)",
+          "steps": [
+            "Read game.js and locate the gather button logic in updateUI() around line 716-717",
+            "Capture canUnitHarvest(unit) result into a variable",
+            "Add gatherBtn.style.display = canGather ? '' : 'none' after the disabled line",
+            "Verify by opening in browser: move unit to empty tile, gather button should disappear; move to rock tile, it should reappear"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t2",
+          "description": "Build Rock Hovel button is hidden when rocks < 10 or structure already on tile",
+          "steps": [
+            "Read game.js and locate the build hovel button logic in updateUI() around line 720-722",
+            "Capture the canBuild condition (rocks >= 10 && !hasStructureOnTile) into a variable",
+            "Add buildBtn.style.display = canHovel ? '' : 'none' after the disabled line",
+            "Verify: with < 10 rocks, button is hidden; gather 10+ rocks on empty tile, button appears"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t3",
+          "description": "Build Solar Panel button is hidden when canBuildSolarPanel() returns false",
+          "steps": [
+            "Read game.js and locate the solar panel button logic in updateUI() around line 725-726",
+            "Capture canBuildSolarPanel() result into a variable",
+            "Add solarBtn.style.display = canSolar ? '' : 'none' after the disabled line",
+            "Verify: button hidden when not adjacent to hovel or insufficient rocks; appears when conditions met"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t4",
+          "description": "Build Battery, Rocktimus, and Comm Dish buttons are hidden when their can* checks fail",
+          "steps": [
+            "Apply the same pattern to build-battery-btn (canBuildSubparBattery), build-rocktimus-btn (canBuildRocktimus), and build-comm-dish-btn (canBuildCommDish)",
+            "Capture each can* result into a variable, add style.display toggle",
+            "Verify each button appears/disappears based on resource and position preconditions"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t5",
+          "description": "Add 'No actions available' fallback message in action panel when all buttons hidden",
+          "steps": [
+            "Add <div id='no-actions-msg'> to index.html inside #action-panel after the last button",
+            "Add CSS class .no-actions-msg in style.css with subtle styling",
+            "In updateUI(), after all button visibility is set, check if any button is visible",
+            "Show/hide the no-actions-msg based on whether any action is available",
+            "Verify: when no actions available, message shows; when any action available, message hidden"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t6",
+          "description": "Hotkeys remain functional as no-ops when buttons are hidden",
+          "steps": [
+            "Verify that the keydown handler (around line 1406) calls action functions directly without checking button DOM state",
+            "Confirm each action function has its own guard clause (canBuild*/canUnitHarvest check)",
+            "Test: press G when not on a resource tile — should be a no-op (no error, no action)",
+            "Test: press B when rocks < 10 — should be a no-op"
+          ],
+          "passes": false
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "No duplicate DOM lookups — each getElementById call appears once in updateUI()",
+          "steps": [
+            "Review updateUI() and confirm each button element is fetched once per call",
+            "Ensure no redundant getElementById calls were introduced"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q2",
+          "description": "disabled property is still set alongside display — both are present for all 6 buttons",
+          "steps": [
+            "Check that every action button still has .disabled = !canX assignment",
+            "Verify .style.display is set right after .disabled for each button"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q3",
+          "description": "No unnecessary code changes outside updateUI() and the two new elements (HTML div, CSS class)",
+          "steps": [
+            "Review the full diff and confirm changes are limited to: updateUI() in game.js, one new div in index.html, one new CSS class in style.css",
+            "Ensure hotkey handler, click listeners, and can* functions are untouched"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q4",
+          "description": "Variable naming follows existing conventions in updateUI()",
+          "steps": [
+            "Check that new variable names (canGather, canHovel, etc.) are consistent in style",
+            "Verify var/const usage matches surrounding code"
+          ],
+          "passes": false
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": null,
+    "runCommand": "python3 -m http.server 8080 --directory /home/user/workspace-7a335192-planner-f2fb2dc8",
+    "readySignal": "Serving HTTP",
+    "appType": "web",
+    "port": 8080,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Action buttons are hidden when preconditions are not met at game start",
+        "steps": [
+          "Start the app and open in browser",
+          "At game start with 0 rocks and 0 energy, verify that build hovel, build solar, build battery, build rocktimus, and build comm dish buttons are NOT visible",
+          "Verify the gather button is visible only if Elon starts on a resource tile",
+          "Verify the 'No actions available' message appears if no buttons are visible"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v2",
+        "description": "Buttons reappear after gathering resources",
+        "steps": [
+          "Move Elon to a tile with rocks and gather",
+          "After gathering enough rocks (10+), move to an empty tile",
+          "Verify the Build Rock Hovel button appears",
+          "Verify it disappears again after building a hovel (rocks drop below 10)"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v3",
+        "description": "Gather button visibility tracks tile resource presence",
+        "steps": [
+          "Move Elon to a tile with rocks — gather button should be visible",
+          "Move Elon to an empty tile — gather button should be hidden",
+          "Move back to a rock tile — gather button should reappear"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v4",
+        "description": "Hotkeys work as no-ops when buttons are hidden",
+        "steps": [
+          "With no resources, press B (build hovel) — nothing should happen, no errors in console",
+          "Press G on an empty tile — nothing should happen",
+          "Press P (solar panel) with no hovel nearby — nothing should happen"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v5",
+        "description": "End turn button is always visible",
+        "steps": [
+          "In any game state, verify the End Turn button is always visible in the sidebar",
+          "After hiding all action buttons, verify the UI is not completely empty — end turn and/or no-actions message visible"
+        ],
+        "passes": false
+      }
+    ]
+  }
+}
