@@ -797,16 +797,31 @@
             if (enabled) anyVisible = true;
         }
 
+        // Call Earth button — hide when no Comm Dish has been built
+        var callEarthBtn = document.getElementById("call-earth-btn");
+        var hasCommDish = state.structures.some(function(s) { return s.type === "comm_dish"; });
+        if (hasCommDish) {
+            callEarthBtn.style.display = "";
+            callEarthBtn.disabled = !canCallEarth();
+            anyVisible = true;
+        } else {
+            callEarthBtn.style.display = "none";
+            callEarthBtn.disabled = true;
+        }
+
+        // Build Mars Throne button — hide until Earth has been contacted
+        var throneBtn = document.getElementById("build-throne-btn");
+        if (state.contactedEarth) {
+            throneBtn.style.display = "";
+            throneBtn.disabled = !canBuildMarsThrone();
+            anyVisible = true;
+        } else {
+            throneBtn.style.display = "none";
+            throneBtn.disabled = true;
+        }
+
         // No actions fallback message
         document.getElementById("no-actions-msg").style.display = anyVisible ? "none" : "";
-
-        // Call Earth button
-        var callEarthBtn = document.getElementById("call-earth-btn");
-        callEarthBtn.disabled = !canCallEarth();
-
-        // Build Mars Throne button
-        var throneBtn = document.getElementById("build-throne-btn");
-        throneBtn.disabled = !canBuildMarsThrone();
 
         // Tile info
         updateTileInfo();
