@@ -303,12 +303,7 @@
 
     function toggleHotkeyModal() {
         state.hotkeyModalOpen = !state.hotkeyModalOpen;
-        var modal = document.getElementById('hotkey-modal');
-        if (state.hotkeyModalOpen) {
-            modal.classList.remove('hidden');
-        } else {
-            modal.classList.add('hidden');
-        }
+        document.getElementById('hotkey-modal').classList.toggle('hidden', !state.hotkeyModalOpen);
     }
 
     // --------------- Input Handling ---------------
@@ -345,9 +340,7 @@
 
     document.getElementById("end-turn-btn").addEventListener("click", endTurn);
     document.getElementById("gather-btn").addEventListener("click", gatherResource);
-    document.getElementById("close-hotkey-modal").addEventListener("click", function () {
-        if (state.hotkeyModalOpen) toggleHotkeyModal();
-    });
+    document.getElementById("close-hotkey-modal").addEventListener("click", toggleHotkeyModal);
 
     // Keyboard controls
     document.addEventListener("keydown", function (e) {
