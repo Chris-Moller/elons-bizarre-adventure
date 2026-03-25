@@ -186,6 +186,10 @@ header .subtitle {
     color: #d4a574;
 }
 
+#game-log .log-entry.energy {
+    color: #ffdd44;
+}
+
 #action-panel .action-btn + .action-btn {
     margin-top: 6px;
 }
