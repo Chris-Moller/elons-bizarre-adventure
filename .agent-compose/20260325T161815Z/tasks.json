@@ -16,7 +16,7 @@
             "Add createUnit(type, row, col) factory function that reads from UNIT_TYPES",
             "Verify factory returns object with: type, name, row, col, movesLeft, movesMax, turnsRemaining"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t2",
@@ -30,7 +30,7 @@
             "Update render() to iterate state.units and draw each one",
             "Verify Elon's basic gameplay still works: move, gather, build, end turn"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t3",
@@ -42,7 +42,7 @@
             "Update sidebar unit-info panel to dynamically show selected unit's name and moves",
             "Add lifespan display in unit-info panel showing 'Lifespan: X turns' when applicable"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t4",
@@ -55,7 +55,7 @@
             "Update updateUI() to enable/disable the build-rocktimus button based on canBuildRocktimus()",
             "Verify construction works: stand on hovel with sufficient resources, press R or click button"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t5",
@@ -65,7 +65,7 @@
             "Select a Rocktimus Robot and verify it can make 5 moves before exhausting",
             "Verify endTurn() resets Rocktimus movesLeft back to 5"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t6",
@@ -76,7 +76,7 @@
             "Verify Elon can still gather rocks",
             "Verify Rocktimus Robot can gather rocks"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t7",
@@ -88,7 +88,7 @@
             "Verify selectedUnit is clamped to valid index after removal",
             "Verify a Rocktimus built on turn N is gone by turn N+5 and a rock resource appears on its tile"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t8",
@@ -100,7 +100,7 @@
             "Selected unit gets bright yellow highlight; unselected units get dimmer highlight",
             "Verify both Elon and Rocktimus render correctly and distinctly on the map"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t9",
@@ -110,7 +110,7 @@
             "Verify Elon shows 1-tile range (2 moves available = all adjacent highlighted)",
             "Verify Rocktimus shows larger reachable area when it has 5 moves"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t10",
@@ -121,7 +121,7 @@
             "Verify Tab cycles through Elon + all robots",
             "Verify each robot can be independently moved and commanded"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t11",
@@ -132,7 +132,7 @@
             "Update unit-info panel to have dynamic elements for name, moves, and lifespan",
             "Add CSS styles for new button, log-entry.construct, log-entry.degrade classes"
           ],
-          "passes": false
+          "passes": true
         }
       ],
       "quality_checklist": [
@@ -143,7 +143,7 @@
             "Grep game.js for 'state.unit' (not 'state.units') — should find zero matches",
             "Verify getSelectedUnit() is used consistently"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q2",
@@ -152,7 +152,7 @@
             "Check that movesPerTurn, canHarvest, lifespan, buildCost are read from UNIT_TYPES, not hardcoded",
             "Verify MOVES_PER_TURN constant is removed or unused"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q3",
@@ -161,7 +161,7 @@
             "Verify placeUnit() either removed or refactored to use createUnit()",
             "No commented-out blocks related to old state.unit"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q4",
@@ -171,7 +171,7 @@
             "Verify selectedUnit is clamped after unit removal",
             "Verify Elon (lifespan: null) is never degraded"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q5",
@@ -181,7 +181,7 @@
             "Verify draw functions follow the same pattern as drawUnit/drawStructure",
             "Verify button/action patterns match existing build-hovel-btn, build-solar-btn"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q6",
@@ -190,7 +190,7 @@
             "Review that construction, movement, harvesting, degradation all key off UNIT_TYPES",
             "Verify render() dispatches by type without hardcoded if/else chains (or that adding a type is a single elif)"
           ],
-          "passes": false
+          "passes": true
         }
       ]
     }
