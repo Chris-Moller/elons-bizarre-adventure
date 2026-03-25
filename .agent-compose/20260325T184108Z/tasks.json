@@ -16,7 +16,7 @@
             "Change EXPOSE 80 to EXPOSE 8080",
             "Verify the Dockerfile syntax looks correct"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t2",
@@ -27,7 +27,7 @@
             "Run curl -s -o /dev/null -w '%{http_code}' http://localhost:8080 and verify 200",
             "Run docker stop test-container"
           ],
-          "passes": false
+          "passes": true
         }
       ],
       "quality_checklist": [
@@ -38,7 +38,7 @@
             "Verify no unnecessary layers or files were added",
             "Verify only the listen port and EXPOSE directive changed"
           ],
-          "passes": false
+          "passes": true
         }
       ]
     }
@@ -61,7 +61,7 @@
           "Verify HTTP 200: curl -s -o /dev/null -w '%{http_code}' http://localhost:8080",
           "Stop the container: docker stop test-container"
         ],
-        "passes": false
+        "passes": true
       }
     ]
   }
