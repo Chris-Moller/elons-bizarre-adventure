@@ -71,3 +71,10 @@
 - **Resolution**: Kept both features — merged state properties (commDishesUsedThisTurn + callEarthDialogOpen from HEAD, marsThronePlaced from incoming); kept Call Earth button with 📡 emoji from HEAD; added Mars Throne button, listener, hotkey entry, and updateUI block from incoming; kept close-call-earth-dialog listener from HEAD alongside build-throne-btn listener
 - **Tests run**: none found — no automated test suite exists
 - **Outcome**: success
+
+## conflict-resolver — 2026-03-25T19:46:28Z
+
+- **Conflict**: index.html (1 conflict region) — upstream added no-actions-msg div, branch had build-throne-btn button; .agent-compose/ files had agent artifact conflicts
+- **Resolution**: Kept both — added build-throne-btn before no-actions-msg div in index.html; accepted theirs for agent artifact files; game.js and style.css auto-merged cleanly
+- **Tests run**: none found — no automated test suite exists
+- **Outcome**: success
