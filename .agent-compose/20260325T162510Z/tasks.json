@@ -16,7 +16,7 @@
             "Add getHovelCapacity(hovel) function that computes base 2 + 4 per unique adjacent battery (direct + two-hop via Solar Panel)",
             "Verify getHovelCapacity uses a Set to deduplicate batteries reachable both ways"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t2",
@@ -26,7 +26,7 @@
             "Add buildSubparBattery() that deducts 2 Energy + 2 Rock, pushes structure, adds log, re-renders",
             "Verify build function follows same pattern as buildSolarPanel()"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t3",
@@ -36,7 +36,7 @@
             "Add log message with 'explosion' type when a battery explodes",
             "Call processSubparBatteryExplosions() in endTurn() BEFORE processSolarPanels()"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t4",
@@ -45,7 +45,7 @@
             "Replace hardcoded 'hovels[j].energy < 2' with 'hovels[j].energy < getHovelCapacity(hovels[j])'",
             "Verify Solar Panels can now store energy up to the new increased cap"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t5",
@@ -55,7 +55,7 @@
             "Add dispatch in drawStructure() for type 'subpar_battery'",
             "Verify the battery renders on the canvas tile at correct position"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t6",
@@ -64,7 +64,7 @@
             "Add <button id='build-battery-btn' class='action-btn' disabled>Build Subpar Battery (2 ⚡ 2 🪨)</button> after the Solar Panel button in index.html",
             "Add click event listener for build-battery-btn calling buildSubparBattery() in game.js"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t7",
@@ -73,7 +73,7 @@
             "Add batteryBtn.disabled = !canBuildSubparBattery() in the updateUI() function",
             "Verify button is enabled only when on empty tile adjacent to Solar Panel or Rock Hovel with sufficient resources"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t8",
@@ -82,7 +82,7 @@
             "Add case 't' in the keydown switch block calling buildSubparBattery()",
             "Add hotkey row <tr><td><kbd>T</kbd></td><td>Build Subpar Battery</td></tr> to the hotkey modal table in index.html"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t9",
@@ -92,7 +92,7 @@
             "Change Rock Hovel energy display from hardcoded '/ 2' to '/ ' + getHovelCapacity(tileStructure)",
             "Verify tile info shows correct capacity (e.g., 'Energy: 0 / 6' with one adjacent battery)"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t10",
@@ -101,7 +101,7 @@
             "Add #game-log .log-entry.explosion { color: #ff4444; } to style.css",
             "Verify explosion log messages display in red"
           ],
-          "passes": false
+          "passes": true
         }
       ],
       "quality_checklist": [
@@ -112,7 +112,7 @@
             "Grep game.js for 'energy < 2' and '/ 2' in Rock Hovel contexts",
             "Verify all references use getHovelCapacity() instead"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q2",
@@ -121,7 +121,7 @@
             "Read getHovelCapacity() implementation",
             "Verify it uses a Set or equivalent to deduplicate batteries reachable both directly and via Solar Panel"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q3",
@@ -130,7 +130,7 @@
             "Read processSubparBatteryExplosions()",
             "Verify the for loop uses a decrementing index (i--) and splice(i, 1)"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q4",
@@ -139,7 +139,7 @@
             "Compare new functions with buildSolarPanel, canBuildSolarPanel, drawSolarPanel patterns",
             "Verify consistent naming, indentation, and variable declaration style"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q5",
@@ -148,7 +148,7 @@
             "Review all new code for unnecessary complexity",
             "Verify no dead code paths or unused variables were introduced"
           ],
-          "passes": false
+          "passes": true
         }
       ]
     }
@@ -169,7 +169,7 @@
           "Look for 'Build Subpar Battery' button in the action panel sidebar",
           "Verify button is present and disabled (Elon starts with 0 resources)"
         ],
-        "passes": false
+        "passes": true
       },
       {
         "id": "v2",
@@ -183,7 +183,7 @@
           "Verify resources decrease by 2 Energy and 2 Rock",
           "Verify battery appears on the canvas with 'BATTERY' label"
         ],
-        "passes": false
+        "passes": true
       },
       {
         "id": "v3",
@@ -193,7 +193,7 @@
           "Verify tile info shows 'Energy: X / 6' instead of 'X / 2'",
           "Build a second adjacent battery if possible and verify capacity shows '/ 10'"
         ],
-        "passes": false
+        "passes": true
       },
       {
         "id": "v4",
@@ -203,7 +203,7 @@
           "Verify there is a row showing 'T' -> 'Build Subpar Battery'",
           "Close modal, verify T key triggers the build when conditions are met"
         ],
-        "passes": false
+        "passes": true
       },
       {
         "id": "v5",
@@ -213,7 +213,7 @@
           "End many turns and eventually observe an explosion log entry (or verify the code path exists)",
           "Verify explosion log text is styled in red"
         ],
-        "passes": false
+        "passes": true
       }
     ]
   }
