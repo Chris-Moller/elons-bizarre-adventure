@@ -115,6 +115,12 @@ header .subtitle {
     margin-top: 4px;
 }
 
+#unit-lifespan {
+    color: #cc6644;
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
+
 .resource-row {
     display: flex;
     align-items: center;
@@ -188,6 +194,14 @@ header .subtitle {
 
 #game-log .log-entry.energy {
     color: #ffdd44;
+}
+
+#game-log .log-entry.construct {
+    color: #44ccaa;
+}
+
+#game-log .log-entry.degrade {
+    color: #cc6644;
 }
 
 #action-panel .action-btn + .action-btn {
