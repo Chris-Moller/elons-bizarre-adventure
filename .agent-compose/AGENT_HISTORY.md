@@ -36,3 +36,10 @@
 - **Resolution**: Merged both features: kept multi-unit architecture (state.units[], getSelectedUnit, UNIT_TYPES, createUnit) from branch; kept full dust storm system (config, rendering, spawning, movement, collision) from upstream; adapted checkDustStormCollisions to iterate state.units instead of state.unit + state.robots; merged CSS to include storm, construct, and degrade log entry styles
 - **Tests run**: none found — no automated test suite exists
 - **Outcome**: success
+
+## conflict-resolver — 2026-03-25T17:02:04Z
+
+- **Conflict**: game.js (4 conflict regions), index.html (2 conflict regions), style.css (1 conflict region) — upstream added Subpar Battery feature (using state.unit single-unit model), branch had multi-unit architecture (state.units[], getSelectedUnit)
+- **Resolution**: Kept both features — Subpar Battery (canBuildSubparBattery, buildSubparBattery, processSubparBatteryExplosions, UI button, "t" hotkey) adapted to use getSelectedUnit() instead of state.unit; Rocktimus (canBuildRocktimus, buildRocktimus, Tab cycling, "r" hotkey) kept as-is; merged CSS to include explosion, construct, and degrade log entry styles; merged HTML to include both battery and rocktimus buttons and hotkey entries; merged endTurn to call both processSubparBatteryExplosions and processUnitDegradation; game-over guards added to all button click handlers
+- **Tests run**: none found — no automated test suite exists
+- **Outcome**: success
