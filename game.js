@@ -31,7 +31,7 @@
         map: [],
         unit: null,
         turn: 1,
-        resources: { rocks: 0 },
+        resources: { rocks: 0, energy: 0 },
         structures: [],
         selectedTile: null,
         logs: [],
@@ -121,8 +121,12 @@
     }
 
     function drawStructure(structure) {
-        const x = structure.col * TILE_SIZE;
-        const y = structure.row * TILE_SIZE;
+        if (structure.type === "solar_panel") {
+            drawSolarPanel(structure);
+            return;
+        }
+        var x = structure.col * TILE_SIZE;
+        var y = structure.row * TILE_SIZE;
 
         // Stone base
         ctx.fillStyle = "#6b5b4f";
@@ -159,6 +163,59 @@
         ctx.font = "bold 7px sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("HOVEL", x + TILE_SIZE / 2, y + TILE_SIZE - 1);
+    }
+
+    function drawSolarPanel(structure) {
+        var x = structure.col * TILE_SIZE;
+        var y = structure.row * TILE_SIZE;
+
+        // Panel base (dark frame)
+        ctx.fillStyle = "#1a1a2e";
+        ctx.fillRect(x + 4, y + 8, TILE_SIZE - 8, TILE_SIZE - 16);
+
+        // Solar cells (blue gradient)
+        ctx.fillStyle = "#2255aa";
+        ctx.fillRect(x + 6, y + 10, TILE_SIZE - 12, TILE_SIZE - 20);
+
+        // Grid lines on panel
+        ctx.strokeStyle = "#3366cc";
+        ctx.lineWidth = 0.5;
+        // Horizontal lines
+        var panelTop = y + 10;
+        var panelBottom = y + TILE_SIZE - 10;
+        var panelLeft = x + 6;
+        var panelRight = x + TILE_SIZE - 6;
+        var cellHeight = (panelBottom - panelTop) / 3;
+        for (var i = 1; i < 3; i++) {
+            ctx.beginPath();
+            ctx.moveTo(panelLeft, panelTop + cellHeight * i);
+            ctx.lineTo(panelRight, panelTop + cellHeight * i);
+            ctx.stroke();
+        }
+        // Vertical line
+        ctx.beginPath();
+        ctx.moveTo(x + TILE_SIZE / 2, panelTop);
+        ctx.lineTo(x + TILE_SIZE / 2, panelBottom);
+        ctx.stroke();
+
+        // Shine effect
+        ctx.fillStyle = "rgba(100, 180, 255, 0.25)";
+        ctx.fillRect(x + 7, y + 11, 8, 5);
+
+        // Support pole
+        ctx.fillStyle = "#555555";
+        ctx.fillRect(x + TILE_SIZE / 2 - 2, y + TILE_SIZE - 10, 4, 6);
+
+        // Frame outline
+        ctx.strokeStyle = "#334466";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 4, y + 8, TILE_SIZE - 8, TILE_SIZE - 16);
+
+        // Label
+        ctx.fillStyle = "#66aaff";
+        ctx.font = "bold 6px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("SOLAR", x + TILE_SIZE / 2, y + TILE_SIZE - 1);
     }
 
     function drawUnit(unit) {
@@ -259,6 +316,7 @@
         document.getElementById("moves-left").textContent = state.unit.movesLeft;
         document.getElementById("moves-max").textContent = state.unit.movesMax;
         document.getElementById("rocks-count").textContent = state.resources.rocks;
+        document.getElementById("energy-count").textContent = state.resources.energy;
 
         // Gather button
         const gatherBtn = document.getElementById("gather-btn");
@@ -269,6 +327,10 @@
         var buildBtn = document.getElementById("build-hovel-btn");
         var hasStructureOnTile = getStructureAt(state.unit.row, state.unit.col) !== null;
         buildBtn.disabled = state.resources.rocks < 10 || hasStructureOnTile;
+
+        // Build Solar Panel button
+        var solarBtn = document.getElementById("build-solar-btn");
+        solarBtn.disabled = !canBuildSolarPanel();
 
         // Tile info
         updateTileInfo();
@@ -285,12 +347,22 @@
         const resourceText = tile.resource ? "Rocks" : "None";
         const hasUnit = tile.row === state.unit.row && tile.col === state.unit.col;
         var tileStructure = getStructureAt(tile.row, tile.col);
-        var structureText = tileStructure ? "Rock Hovel" : "None";
+        var structureText = "None";
+        var energyText = "";
+        if (tileStructure) {
+            if (tileStructure.type === "rock_hovel") {
+                structureText = "Rock Hovel";
+                energyText = '<div><strong>Energy:</strong> ' + tileStructure.energy + ' / 2</div>';
+            } else if (tileStructure.type === "solar_panel") {
+                structureText = "Solar Panel";
+            }
+        }
         el.innerHTML = `
             <div><strong>Terrain:</strong> ${terrainName}</div>
             <div><strong>Position:</strong> (${tile.col}, ${tile.row})</div>
             <div><strong>Resource:</strong> ${resourceText}</div>
             <div><strong>Structure:</strong> ${structureText}</div>
+            ${energyText}
             ${hasUnit ? '<div><strong>Unit:</strong> Elon Musk</div>' : ""}
         `;
     }
@@ -365,6 +437,7 @@
             type: "rock_hovel",
             row: unit.row,
             col: unit.col,
+            energy: 0,
         });
 
         addLog("Elon built a Rock Hovel at (" + unit.col + ", " + unit.row + ")", "build");
@@ -373,11 +446,79 @@
         updateUI();
     }
 
+    function getAdjacentHovels(row, col) {
+        var hovels = [];
+        for (var dr = -1; dr <= 1; dr++) {
+            for (var dc = -1; dc <= 1; dc++) {
+                if (dr === 0 && dc === 0) continue;
+                var nr = row + dr;
+                var nc = col + dc;
+                if (nr < 0 || nr >= MAP_ROWS || nc < 0 || nc >= MAP_COLS) continue;
+                var s = getStructureAt(nr, nc);
+                if (s && s.type === "rock_hovel") {
+                    hovels.push(s);
+                }
+            }
+        }
+        return hovels;
+    }
+
+    function canBuildSolarPanel() {
+        var unit = state.unit;
+        if (state.resources.rocks < 2) return false;
+        if (getStructureAt(unit.row, unit.col) !== null) return false;
+        var hovels = getAdjacentHovels(unit.row, unit.col);
+        return hovels.length > 0;
+    }
+
+    function buildSolarPanel() {
+        if (!canBuildSolarPanel()) return;
+        var unit = state.unit;
+
+        state.resources.rocks -= 2;
+        state.structures.push({
+            type: "solar_panel",
+            row: unit.row,
+            col: unit.col,
+        });
+
+        addLog("Elon built a Solar Panel at (" + unit.col + ", " + unit.row + ")", "build");
+
+        render();
+        updateUI();
+    }
+
+    function processSolarPanels() {
+        var totalGenerated = 0;
+        for (var i = 0; i < state.structures.length; i++) {
+            var panel = state.structures[i];
+            if (panel.type !== "solar_panel") continue;
+
+            // 50% chance to generate energy
+            if (Math.random() < 0.5) {
+                var hovels = getAdjacentHovels(panel.row, panel.col);
+                for (var j = 0; j < hovels.length; j++) {
+                    if (hovels[j].energy < 2) {
+                        hovels[j].energy++;
+                        state.resources.energy++;
+                        totalGenerated++;
+                        break;
+                    }
+                }
+            }
+        }
+        if (totalGenerated > 0) {
+            addLog("Solar Panels generated " + totalGenerated + " Energy! (Total: " + state.resources.energy + ")", "energy");
+        }
+    }
+
     function endTurn() {
         state.turn++;
         state.unit.movesLeft = state.unit.movesMax;
 
         addLog(`--- Turn ${state.turn} ---`, "turn");
+
+        processSolarPanels();
 
         render();
         updateUI();
@@ -423,6 +564,7 @@
     document.getElementById("end-turn-btn").addEventListener("click", endTurn);
     document.getElementById("gather-btn").addEventListener("click", gatherResource);
     document.getElementById("build-hovel-btn").addEventListener("click", buildRockHovel);
+    document.getElementById("build-solar-btn").addEventListener("click", buildSolarPanel);
     document.getElementById("close-hotkey-modal").addEventListener("click", toggleHotkeyModal);
 
     // Keyboard controls
@@ -464,6 +606,9 @@
             case "b":
                 buildRockHovel();
                 return;
+            case "p":
+                buildSolarPanel();
+                return;
             case "Enter":
             case "e":
                 endTurn();
@@ -481,7 +626,7 @@
         state.map = generateMap();
         state.unit = placeUnit(state.map);
         state.turn = 1;
-        state.resources = { rocks: 0 };
+        state.resources = { rocks: 0, energy: 0 };
         state.structures = [];
         state.logs = [];
         state.selectedTile = state.map[state.unit.row][state.unit.col];
