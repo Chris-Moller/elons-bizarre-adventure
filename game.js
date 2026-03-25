@@ -493,23 +493,6 @@
         updateUI();
     }
 
-    function getAdjacentHovels(row, col) {
-        var hovels = [];
-        for (var dr = -1; dr <= 1; dr++) {
-            for (var dc = -1; dc <= 1; dc++) {
-                if (dr === 0 && dc === 0) continue;
-                var nr = row + dr;
-                var nc = col + dc;
-                if (nr < 0 || nr >= MAP_ROWS || nc < 0 || nc >= MAP_COLS) continue;
-                var s = getStructureAt(nr, nc);
-                if (s && s.type === "rock_hovel") {
-                    hovels.push(s);
-                }
-            }
-        }
-        return hovels;
-    }
-
     function getAdjacentStructures(row, col, type) {
         var results = [];
         for (var dr = -1; dr <= 1; dr++) {
@@ -548,7 +531,7 @@
         var unit = state.unit;
         if (state.resources.rocks < 2) return false;
         if (getStructureAt(unit.row, unit.col) !== null) return false;
-        var hovels = getAdjacentHovels(unit.row, unit.col);
+        var hovels = getAdjacentStructures(unit.row, unit.col, "rock_hovel");
         return hovels.length > 0;
     }
 
@@ -581,6 +564,7 @@
     function buildSubparBattery() {
         if (!canBuildSubparBattery()) return;
         var unit = state.unit;
+
         state.resources.energy -= 2;
         state.resources.rocks -= 2;
         state.structures.push({
@@ -588,7 +572,9 @@
             row: unit.row,
             col: unit.col,
         });
+
         addLog("Elon built a Subpar Battery at (" + unit.col + ", " + unit.row + ")", "build");
+
         render();
         updateUI();
     }
@@ -601,7 +587,7 @@
 
             // 50% chance to generate energy
             if (Math.random() < 0.5) {
-                var hovels = getAdjacentHovels(panel.row, panel.col);
+                var hovels = getAdjacentStructures(panel.row, panel.col, "rock_hovel");
                 for (var j = 0; j < hovels.length; j++) {
                     if (hovels[j].energy < getHovelCapacity(hovels[j])) {
                         hovels[j].energy++;
