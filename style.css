@@ -190,6 +190,10 @@ header .subtitle {
     color: #ffdd44;
 }
 
+#game-log .log-entry.explosion {
+    color: #ff4444;
+}
+
 #action-panel .action-btn + .action-btn {
     margin-top: 6px;
 }

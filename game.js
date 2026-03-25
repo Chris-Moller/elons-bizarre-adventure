@@ -120,9 +120,50 @@
         ctx.fill();
     }
 
+    function drawSubparBattery(structure) {
+        var x = structure.col * TILE_SIZE;
+        var y = structure.row * TILE_SIZE;
+
+        // Battery body (green)
+        ctx.fillStyle = "#2d8a2d";
+        ctx.fillRect(x + 8, y + 8, TILE_SIZE - 16, TILE_SIZE - 16);
+
+        // Battery body outline
+        ctx.strokeStyle = "#1a5c1a";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 8, y + 8, TILE_SIZE - 16, TILE_SIZE - 16);
+
+        // Terminal nub (top)
+        ctx.fillStyle = "#66ff66";
+        ctx.fillRect(x + TILE_SIZE / 2 - 3, y + 4, 6, 5);
+
+        // Terminal nub (bottom)
+        ctx.fillRect(x + TILE_SIZE / 2 - 3, y + TILE_SIZE - 9, 6, 5);
+
+        // Inner highlight
+        ctx.fillStyle = "#44cc44";
+        ctx.fillRect(x + 10, y + 10, TILE_SIZE - 20, TILE_SIZE - 20);
+
+        // Lightning bolt icon
+        ctx.fillStyle = "#1a5c1a";
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("⚡", x + TILE_SIZE / 2, y + TILE_SIZE / 2 + 4);
+
+        // Label
+        ctx.fillStyle = "#66ff66";
+        ctx.font = "bold 5px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("BATTERY", x + TILE_SIZE / 2, y + TILE_SIZE - 1);
+    }
+
     function drawStructure(structure) {
         if (structure.type === "solar_panel") {
             drawSolarPanel(structure);
+            return;
+        }
+        if (structure.type === "subpar_battery") {
+            drawSubparBattery(structure);
             return;
         }
         var x = structure.col * TILE_SIZE;
@@ -332,6 +373,10 @@
         var solarBtn = document.getElementById("build-solar-btn");
         solarBtn.disabled = !canBuildSolarPanel();
 
+        // Build Subpar Battery button
+        var batteryBtn = document.getElementById("build-battery-btn");
+        batteryBtn.disabled = !canBuildSubparBattery();
+
         // Tile info
         updateTileInfo();
     }
@@ -352,9 +397,11 @@
         if (tileStructure) {
             if (tileStructure.type === "rock_hovel") {
                 structureText = "Rock Hovel";
-                energyText = '<div><strong>Energy:</strong> ' + tileStructure.energy + ' / 2</div>';
+                energyText = '<div><strong>Energy:</strong> ' + tileStructure.energy + ' / ' + getHovelCapacity(tileStructure) + '</div>';
             } else if (tileStructure.type === "solar_panel") {
                 structureText = "Solar Panel";
+            } else if (tileStructure.type === "subpar_battery") {
+                structureText = "Subpar Battery";
             }
         }
         el.innerHTML = `
@@ -463,6 +510,40 @@
         return hovels;
     }
 
+    function getAdjacentStructures(row, col, type) {
+        var results = [];
+        for (var dr = -1; dr <= 1; dr++) {
+            for (var dc = -1; dc <= 1; dc++) {
+                if (dr === 0 && dc === 0) continue;
+                var nr = row + dr;
+                var nc = col + dc;
+                if (nr < 0 || nr >= MAP_ROWS || nc < 0 || nc >= MAP_COLS) continue;
+                var s = getStructureAt(nr, nc);
+                if (s && s.type === type) results.push(s);
+            }
+        }
+        return results;
+    }
+
+    function getHovelCapacity(hovel) {
+        var base = 2;
+        var seen = new Set();
+        // Direct adjacent batteries
+        var directBatteries = getAdjacentStructures(hovel.row, hovel.col, "subpar_battery");
+        for (var i = 0; i < directBatteries.length; i++) {
+            seen.add(directBatteries[i].row + "," + directBatteries[i].col);
+        }
+        // Two-hop: batteries adjacent to Solar Panels that are adjacent to the hovel
+        var adjacentPanels = getAdjacentStructures(hovel.row, hovel.col, "solar_panel");
+        for (var p = 0; p < adjacentPanels.length; p++) {
+            var panelBatteries = getAdjacentStructures(adjacentPanels[p].row, adjacentPanels[p].col, "subpar_battery");
+            for (var b = 0; b < panelBatteries.length; b++) {
+                seen.add(panelBatteries[b].row + "," + panelBatteries[b].col);
+            }
+        }
+        return base + seen.size * 4;
+    }
+
     function canBuildSolarPanel() {
         var unit = state.unit;
         if (state.resources.rocks < 2) return false;
@@ -488,6 +569,30 @@
         updateUI();
     }
 
+    function canBuildSubparBattery() {
+        var unit = state.unit;
+        if (state.resources.energy < 2 || state.resources.rocks < 2) return false;
+        if (getStructureAt(unit.row, unit.col) !== null) return false;
+        var adjPanels = getAdjacentStructures(unit.row, unit.col, "solar_panel");
+        var adjHovels = getAdjacentStructures(unit.row, unit.col, "rock_hovel");
+        return adjPanels.length > 0 || adjHovels.length > 0;
+    }
+
+    function buildSubparBattery() {
+        if (!canBuildSubparBattery()) return;
+        var unit = state.unit;
+        state.resources.energy -= 2;
+        state.resources.rocks -= 2;
+        state.structures.push({
+            type: "subpar_battery",
+            row: unit.row,
+            col: unit.col,
+        });
+        addLog("Elon built a Subpar Battery at (" + unit.col + ", " + unit.row + ")", "build");
+        render();
+        updateUI();
+    }
+
     function processSolarPanels() {
         var totalGenerated = 0;
         for (var i = 0; i < state.structures.length; i++) {
@@ -498,7 +603,7 @@
             if (Math.random() < 0.5) {
                 var hovels = getAdjacentHovels(panel.row, panel.col);
                 for (var j = 0; j < hovels.length; j++) {
-                    if (hovels[j].energy < 2) {
+                    if (hovels[j].energy < getHovelCapacity(hovels[j])) {
                         hovels[j].energy++;
                         state.resources.energy++;
                         totalGenerated++;
@@ -512,12 +617,24 @@
         }
     }
 
+    function processSubparBatteryExplosions() {
+        for (var i = state.structures.length - 1; i >= 0; i--) {
+            var s = state.structures[i];
+            if (s.type !== "subpar_battery") continue;
+            if (Math.random() < 0.02) {
+                addLog("A Subpar Battery at (" + s.col + ", " + s.row + ") exploded!", "explosion");
+                state.structures.splice(i, 1);
+            }
+        }
+    }
+
     function endTurn() {
         state.turn++;
         state.unit.movesLeft = state.unit.movesMax;
 
         addLog(`--- Turn ${state.turn} ---`, "turn");
 
+        processSubparBatteryExplosions();
         processSolarPanels();
 
         render();
@@ -565,6 +682,7 @@
     document.getElementById("gather-btn").addEventListener("click", gatherResource);
     document.getElementById("build-hovel-btn").addEventListener("click", buildRockHovel);
     document.getElementById("build-solar-btn").addEventListener("click", buildSolarPanel);
+    document.getElementById("build-battery-btn").addEventListener("click", buildSubparBattery);
     document.getElementById("close-hotkey-modal").addEventListener("click", toggleHotkeyModal);
 
     // Keyboard controls
@@ -608,6 +726,9 @@
                 return;
             case "p":
                 buildSolarPanel();
+                return;
+            case "t":
+                buildSubparBattery();
                 return;
             case "Enter":
             case "e":
