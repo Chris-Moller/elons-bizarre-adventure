@@ -29,3 +29,10 @@
 - **quality_checklist**: 6 items verified (q1, q2, q3, q4, q5, q6 — all pass)
 - **Reviews**: code quality (3 issues: 2 fixed, 1 deferred — render dispatch fallthrough is low-impact for 2-type game), error handling (clean), test coverage (adequate — no test infra project-wide)
 - **Outcome**: success / exit_signal: true
+
+## conflict-resolver — 2026-03-25T16:49:00Z
+
+- **Conflict**: game.js (8 conflict regions) and style.css (1 conflict region) — upstream added Dust Storm feature (single-unit model with state.unit + state.robots), branch added multi-unit architecture (state.units[], UNIT_TYPES, createUnit, Rocktimus as unit)
+- **Resolution**: Merged both features: kept multi-unit architecture (state.units[], getSelectedUnit, UNIT_TYPES, createUnit) from branch; kept full dust storm system (config, rendering, spawning, movement, collision) from upstream; adapted checkDustStormCollisions to iterate state.units instead of state.unit + state.robots; merged CSS to include storm, construct, and degrade log entry styles
+- **Tests run**: none found — no automated test suite exists
+- **Outcome**: success
