@@ -53,3 +53,8 @@
 - **Items completed**: t1, t2, t3, t4, t5, t6, q1, q2, q3, q4
 - **Tests run**: yes — verified server serves updated files via curl (HTTP 200, all 3 files confirmed)
 - **Outcome**: success
+
+## simplifier — 2026-03-25T19:45:00Z
+- **Summary**: Consolidated 6 repeated button show/hide/disable blocks in updateUI() into a data-driven array + loop, reducing 38 lines to 18 while preserving identical behavior.
+- **Tests run**: no — no automated test suite exists; verified JS syntax with node --check
+- **Outcome**: success
