@@ -1255,25 +1255,55 @@
     function canBuildCommDish() {
         var unit = getSelectedUnit();
         if (state.resources.rocks < 10) return false;
-        if (getTotalHovelEnergy() < 10) return false;
-        if (getStructureAt(unit.row, unit.col) !== null) return false;
-        return true;
+        // Unit must be standing in a Rock Hovel with enough energy
+        var hovel = getStructureAt(unit.row, unit.col);
+        if (!hovel || hovel.type !== "rock_hovel") return false;
+        if (hovel.energy < 10) return false;
+        // Must have at least one adjacent empty tile to place the dish
+        for (var dr = -1; dr <= 1; dr++) {
+            for (var dc = -1; dc <= 1; dc++) {
+                if (dr === 0 && dc === 0) continue;
+                var nr = unit.row + dr;
+                var nc = unit.col + dc;
+                if (!isInBounds(nr, nc)) continue;
+                if (getStructureAt(nr, nc) === null) return true;
+            }
+        }
+        return false;
     }
 
     function buildCommDish() {
         if (!canBuildCommDish()) return;
         var unit = getSelectedUnit();
+        var hovel = getStructureAt(unit.row, unit.col);
 
+        // Find an adjacent empty tile to place the dish
+        var targetRow = -1, targetCol = -1;
+        for (var dr = -1; dr <= 1; dr++) {
+            for (var dc = -1; dc <= 1; dc++) {
+                if (dr === 0 && dc === 0) continue;
+                var nr = unit.row + dr;
+                var nc = unit.col + dc;
+                if (!isInBounds(nr, nc)) continue;
+                if (getStructureAt(nr, nc) === null) {
+                    targetRow = nr;
+                    targetCol = nc;
+                    break;
+                }
+            }
+            if (targetRow >= 0) break;
+        }
+        if (targetRow < 0) return;
+
+        hovel.energy -= 10;
         state.resources.rocks -= 10;
-        deductHovelEnergy(10);
-
         state.structures.push({
             type: "comm_dish",
-            row: unit.row,
-            col: unit.col,
+            row: targetRow,
+            col: targetCol,
         });
 
-        addLog(unit.name + " built a Comm Dish at (" + unit.col + ", " + unit.row + ")", "build");
+        addLog(unit.name + " built a Comm Dish at (" + targetCol + ", " + targetRow + ")", "build");
 
         refreshView();
     }
@@ -1302,23 +1332,6 @@
 
         addLog(unit.name + " built a Greenhouse at (" + unit.col + ", " + unit.row + ")", "build");
 
-        refreshView();
-    }
-
-    // --------------- Call Earth Action ---------------
-    function canCallEarth() {
-        if (state.gameOver) return false;
-        if (state.contactedEarth) return false;
-        var unit = getSelectedUnit();
-        var structure = getStructureAt(unit.row, unit.col);
-        if (!structure || structure.type !== "comm_dish") return false;
-        return true;
-    }
-
-    function callEarth() {
-        if (!canCallEarth()) return;
-        state.contactedEarth = true;
-        addLog("Elon contacted Earth! A new blueprint has been received...", "build");
         refreshView();
     }
 
