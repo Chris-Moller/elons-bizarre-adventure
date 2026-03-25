@@ -570,13 +570,13 @@
     function gatherResource() {
         var unit = getSelectedUnit();
         if (!canUnitHarvest(unit)) return;
-        const tile = state.map[unit.row][unit.col];
+        var tile = state.map[unit.row][unit.col];
+        var resourceType = tile.resource;
 
-        if (tile.resource === "rocks") {
-            tile.resource = null;
-            state.resources.rocks++;
-            addLog(unit.name + " gathered Rocks! (Total: " + state.resources.rocks + ")", "gather");
-        }
+        tile.resource = null;
+        state.resources[resourceType]++;
+        var label = resourceType.charAt(0).toUpperCase() + resourceType.slice(1);
+        addLog(unit.name + " gathered " + label + "! (Total: " + state.resources[resourceType] + ")", "gather");
 
         refreshView();
     }
@@ -731,8 +731,10 @@
                 }
                 addLog(unit.name + " has degraded at (" + unit.col + ", " + unit.row + ")", "degrade");
                 state.units.splice(i, 1);
-                // Clamp selectedUnit
-                if (state.selectedUnit >= state.units.length) {
+                // Adjust selectedUnit to track the same unit
+                if (i < state.selectedUnit) {
+                    state.selectedUnit--;
+                } else if (state.selectedUnit >= state.units.length) {
                     state.selectedUnit = 0;
                 }
             }
