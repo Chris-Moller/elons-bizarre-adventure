@@ -23,3 +23,9 @@
 - **Summary**: Extracted three shared helpers (refreshView, isInBounds, canUnitHarvest) to eliminate duplicated logic; removed unnecessary null-check on rocktimusBtn element for consistency with other button references.
 - **Tests run**: no — no automated test suite exists
 - **Outcome**: success
+
+## reviewer — 2026-03-25T17:30:00Z
+- **Summary**: issues fixed — selectedUnit index drift during degradation (logic bug), gatherResource hardcoded "rocks" instead of using generalized resource type
+- **quality_checklist**: 6 items verified (q1, q2, q3, q4, q5, q6 — all pass)
+- **Reviews**: code quality (3 issues: 2 fixed, 1 deferred — render dispatch fallthrough is low-impact for 2-type game), error handling (clean), test coverage (adequate — no test infra project-wide)
+- **Outcome**: success / exit_signal: true
