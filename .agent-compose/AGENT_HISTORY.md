@@ -13,3 +13,8 @@
 - **quality_checklist**: 4 items verified (q1, q2, q3, q4 — all pass)
 - **Reviews**: code quality (2 issues: 1 fixed, 1 not actionable — overlay already blocks pointer input), error handling (clean), test coverage (adequate — no test infra project-wide)
 - **Outcome**: success / exit_signal: true
+
+## implementer/main — 2026-03-25T16:30:00Z
+- **Items completed**: t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, q1, q2, q3, q4, q5, q6
+- **Tests run**: no — no automated test suite; verified server serves updated files via curl; grep confirmed no state.unit references remain
+- **Outcome**: success
