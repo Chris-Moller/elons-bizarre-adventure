@@ -7,3 +7,9 @@
 - **Summary**: Simplified toggleHotkeyModal to use classList.toggle with force parameter instead of if/else; replaced anonymous close-button handler with direct function reference, removing a redundant guard check.
 - **Tests run**: no — no test suite exists
 - **Outcome**: success
+
+## reviewer — 2026-03-25T15:20:00Z
+- **Summary**: issues fixed — quoting style inconsistency (single quotes → double quotes to match codebase convention)
+- **quality_checklist**: 4 items verified (q1, q2, q3, q4 — all pass)
+- **Reviews**: code quality (2 issues: 1 fixed, 1 not actionable — overlay already blocks pointer input), error handling (clean), test coverage (adequate — no test infra project-wide)
+- **Outcome**: success / exit_signal: true

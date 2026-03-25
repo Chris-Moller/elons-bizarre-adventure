@@ -303,7 +303,7 @@
 
     function toggleHotkeyModal() {
         state.hotkeyModalOpen = !state.hotkeyModalOpen;
-        document.getElementById('hotkey-modal').classList.toggle('hidden', !state.hotkeyModalOpen);
+        document.getElementById("hotkey-modal").classList.toggle("hidden", !state.hotkeyModalOpen);
     }
 
     // --------------- Input Handling ---------------
@@ -345,7 +345,7 @@
     // Keyboard controls
     document.addEventListener("keydown", function (e) {
         // Handle hotkey modal toggle
-        if (e.key === 'Escape') {
+        if (e.key === "Escape") {
             e.preventDefault();
             toggleHotkeyModal();
             return;
