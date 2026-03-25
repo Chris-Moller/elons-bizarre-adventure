@@ -18,3 +18,8 @@
 - **Items completed**: t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, q1, q2, q3, q4, q5
 - **Tests run**: no — no test suite exists; verified server serves updated files via curl
 - **Outcome**: success
+
+## simplifier — 2026-03-25T17:00:00Z
+- **Summary**: Removed duplicate `getAdjacentHovels` function — replaced all call sites with the generalized `getAdjacentStructures(row, col, "rock_hovel")` introduced by the battery feature. Normalized blank line spacing in `buildSubparBattery` to match existing build function conventions. Net -14 lines.
+- **Tests run**: no — no test suite exists; syntax-checked with `node -c game.js`
+- **Outcome**: success
