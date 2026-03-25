@@ -11,7 +11,6 @@
     const MAP_ROWS = 18;
     const TILE_SIZE = 40;
     const ROCK_CHANCE = 0.10;
-    const MOVES_PER_TURN = 2;
 
     // Tile terrain types
     const TERRAIN = {
@@ -32,10 +31,44 @@
     const DUST_STORM_INTERVAL_MIN = 8;
     const DUST_STORM_INTERVAL_MAX = 15;
 
+    // --------------- Unit Registry ---------------
+    const UNIT_TYPES = {
+        elon: {
+            name: "Elon Musk",
+            movesPerTurn: 2,
+            canHarvest: ["rocks"],
+            lifespan: null,
+            degradeResource: null,
+            buildCost: null,
+        },
+        rocktimus: {
+            name: "Rocktimus Robot",
+            movesPerTurn: 5,
+            canHarvest: ["rocks"],
+            lifespan: 5,
+            degradeResource: { type: "rocks", amount: 1 },
+            buildCost: { energy: 2, rocks: 1 },
+        },
+    };
+
+    function createUnit(type, row, col) {
+        var def = UNIT_TYPES[type];
+        return {
+            type: type,
+            name: def.name,
+            row: row,
+            col: col,
+            movesLeft: def.movesPerTurn,
+            movesMax: def.movesPerTurn,
+            turnsRemaining: def.lifespan,
+        };
+    }
+
     // --------------- State ---------------
     const state = {
         map: [],
-        unit: null,
+        units: [],
+        selectedUnit: 0,
         turn: 1,
         resources: { rocks: 0, energy: 0 },
         structures: [],
@@ -48,6 +81,33 @@
         logs: [],
         hotkeyModalOpen: false,
     };
+
+    function refreshView() {
+        render();
+        updateUI();
+    }
+
+    function getSelectedUnit() {
+        return state.units[state.selectedUnit];
+    }
+
+    function isInBounds(row, col) {
+        return row >= 0 && row < MAP_ROWS && col >= 0 && col < MAP_COLS;
+    }
+
+    function canUnitHarvest(unit) {
+        var tile = state.map[unit.row][unit.col];
+        return tile.resource && UNIT_TYPES[unit.type].canHarvest.includes(tile.resource);
+    }
+
+    function getUnitAt(row, col) {
+        for (var i = 0; i < state.units.length; i++) {
+            if (state.units[i].row === row && state.units[i].col === col) {
+                return state.units[i];
+            }
+        }
+        return null;
+    }
 
     // --------------- Map Generation ---------------
     function generateMap() {
@@ -77,13 +137,7 @@
             row = Math.floor(Math.random() * MAP_ROWS);
             col = Math.floor(Math.random() * MAP_COLS);
         } while (map[row][col].resource !== null);
-        return {
-            name: "Elon Musk",
-            row,
-            col,
-            movesLeft: MOVES_PER_TURN,
-            movesMax: MOVES_PER_TURN,
-        };
+        return createUnit("elon", row, col);
     }
 
     // --------------- Canvas Rendering ---------------
@@ -270,12 +324,12 @@
         ctx.fillText("SOLAR", x + TILE_SIZE / 2, y + TILE_SIZE - 1);
     }
 
-    function drawUnit(unit) {
+    function drawElonUnit(unit, isSelected) {
         const x = unit.col * TILE_SIZE;
         const y = unit.row * TILE_SIZE;
 
         // Highlight the unit tile
-        ctx.fillStyle = "rgba(255, 204, 0, 0.25)";
+        ctx.fillStyle = isSelected ? "rgba(255, 204, 0, 0.25)" : "rgba(255, 204, 0, 0.10)";
         ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
         // Draw Elon as a simple character
@@ -328,36 +382,64 @@
         drawCircle(cx, cy - 6, 4);
 
         // Label
-        ctx.fillStyle = "#ffcc00";
+        ctx.fillStyle = isSelected ? "#ffcc00" : "#aa8800";
         ctx.font = "bold 9px sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("ELON", cx, y + TILE_SIZE - 2);
     }
 
-    function drawRobot(robot) {
-        var x = robot.col * TILE_SIZE;
-        var y = robot.row * TILE_SIZE;
+    function drawRocktimusRobot(unit, isSelected) {
+        var x = unit.col * TILE_SIZE;
+        var y = unit.row * TILE_SIZE;
         var cx = x + TILE_SIZE / 2;
-        var cy = y + TILE_SIZE / 2;
 
-        // Robot body
-        ctx.fillStyle = "#8888aa";
-        ctx.fillRect(cx - 8, cy - 2, 16, 14);
+        // Highlight the unit tile
+        ctx.fillStyle = isSelected ? "rgba(255, 204, 0, 0.25)" : "rgba(100, 200, 160, 0.10)";
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-        // Robot head
-        ctx.fillStyle = "#9999bb";
-        ctx.fillRect(cx - 6, cy - 10, 12, 10);
+        // Metallic gray rectangular body
+        ctx.fillStyle = "#888888";
+        ctx.fillRect(x + 10, y + 10, TILE_SIZE - 20, TILE_SIZE - 18);
 
-        // Eyes
-        ctx.fillStyle = "#ff3333";
-        drawCircle(cx - 3, cy - 6, 2);
-        drawCircle(cx + 3, cy - 6, 2);
+        // Darker outline
+        ctx.strokeStyle = "#555555";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 10, y + 10, TILE_SIZE - 20, TILE_SIZE - 18);
+
+        // Head (smaller rect on top)
+        ctx.fillStyle = "#999999";
+        ctx.fillRect(x + 13, y + 4, TILE_SIZE - 26, 8);
+        ctx.strokeStyle = "#666666";
+        ctx.strokeRect(x + 13, y + 4, TILE_SIZE - 26, 8);
+
+        // Orange/amber eyes
+        ctx.fillStyle = "#ff8800";
+        drawCircle(cx - 4, y + 8, 2);
+        drawCircle(cx + 4, y + 8, 2);
+
+        // Rocky texture details (small gray circles on body)
+        ctx.fillStyle = "#777777";
+        drawCircle(cx - 3, y + 18, 2);
+        ctx.fillStyle = "#999999";
+        drawCircle(cx + 4, y + 22, 2);
+        ctx.fillStyle = "#6a6a6a";
+        drawCircle(cx, y + 26, 1.5);
 
         // Label
-        ctx.fillStyle = "#aaaacc";
-        ctx.font = "bold 6px sans-serif";
+        ctx.fillStyle = isSelected ? "#44ccaa" : "#338866";
+        ctx.font = "bold 8px sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("ROBO", cx, y + TILE_SIZE - 2);
+
+        // Lifespan badge (small number in top-right corner)
+        if (unit.turnsRemaining !== null) {
+            ctx.fillStyle = "#cc3333";
+            drawCircle(x + TILE_SIZE - 8, y + 6, 6);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 8px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(String(unit.turnsRemaining), x + TILE_SIZE - 8, y + 9);
+        }
     }
 
     // --------------- Dust Storm Rendering ---------------
@@ -411,21 +493,43 @@
 
     function drawMoveRange(unit) {
         if (unit.movesLeft <= 0) return;
-        for (let dr = -1; dr <= 1; dr++) {
-            for (let dc = -1; dc <= 1; dc++) {
-                if (dr === 0 && dc === 0) continue;
-                const nr = unit.row + dr;
-                const nc = unit.col + dc;
-                if (nr >= 0 && nr < MAP_ROWS && nc >= 0 && nc < MAP_COLS) {
-                    const x = nc * TILE_SIZE;
-                    const y = nr * TILE_SIZE;
-                    ctx.fillStyle = "rgba(100, 180, 255, 0.15)";
-                    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                    ctx.strokeStyle = "rgba(100, 180, 255, 0.4)";
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+
+        // BFS flood fill for reachable tiles within movesLeft steps (8-directional)
+        var visited = {};
+        var queue = [{ row: unit.row, col: unit.col, dist: 0 }];
+        visited[unit.row + "," + unit.col] = true;
+
+        while (queue.length > 0) {
+            var current = queue.shift();
+            if (current.dist >= unit.movesLeft) continue;
+
+            for (var dr = -1; dr <= 1; dr++) {
+                for (var dc = -1; dc <= 1; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    var nr = current.row + dr;
+                    var nc = current.col + dc;
+                    var key = nr + "," + nc;
+                    if (isInBounds(nr, nc) && !visited[key]) {
+                        visited[key] = true;
+                        queue.push({ row: nr, col: nc, dist: current.dist + 1 });
+                    }
                 }
             }
+        }
+
+        // Draw all reachable tiles (except the unit's own tile)
+        for (var tileKey in visited) {
+            var parts = tileKey.split(",");
+            var r = parseInt(parts[0], 10);
+            var c = parseInt(parts[1], 10);
+            if (r === unit.row && c === unit.col) continue;
+            var tx = c * TILE_SIZE;
+            var ty = r * TILE_SIZE;
+            ctx.fillStyle = "rgba(100, 180, 255, 0.15)";
+            ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
+            ctx.strokeStyle = "rgba(100, 180, 255, 0.4)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(tx + 1, ty + 1, TILE_SIZE - 2, TILE_SIZE - 2);
         }
     }
 
@@ -449,18 +553,27 @@
             drawDustStorm(state.dustStorms[s]);
         }
 
-        // Draw robots
-        for (var r = 0; r < state.robots.length; r++) {
-            drawRobot(state.robots[r]);
+        // Draw movement range for selected unit
+        var selected = getSelectedUnit();
+        if (selected) {
+            drawMoveRange(selected);
         }
 
-        // Draw movement range
-        if (!state.gameOver) {
-            drawMoveRange(state.unit);
+        // Draw all units
+        for (var u = 0; u < state.units.length; u++) {
+            var unit = state.units[u];
+            var isSelected = (u === state.selectedUnit);
+            if (unit.type === "rocktimus") {
+                drawRocktimusRobot(unit, isSelected);
+            } else {
+                drawElonUnit(unit, isSelected);
+            }
         }
 
-        // Draw unit
-        drawUnit(state.unit);
+        // Draw selected unit border highlight
+        if (selected) {
+            drawHighlight({ col: selected.col, row: selected.row }, "#ffcc00");
+        }
 
         // Draw selected tile highlight
         if (state.selectedTile) {
@@ -470,20 +583,33 @@
 
     // --------------- UI Updates ---------------
     function updateUI() {
+        var unit = getSelectedUnit();
         document.getElementById("turn-number").textContent = state.turn;
-        document.getElementById("moves-left").textContent = state.unit.movesLeft;
-        document.getElementById("moves-max").textContent = state.unit.movesMax;
+        document.getElementById("unit-name").textContent = unit.name;
+        document.getElementById("moves-left").textContent = unit.movesLeft;
+        document.getElementById("moves-max").textContent = unit.movesMax;
         document.getElementById("rocks-count").textContent = state.resources.rocks;
         document.getElementById("energy-count").textContent = state.resources.energy;
 
+        // Lifespan display
+        var lifespanEl = document.getElementById("unit-lifespan");
+        if (lifespanEl) {
+            if (unit.turnsRemaining !== null) {
+                lifespanEl.textContent = "Lifespan: " + unit.turnsRemaining + " turns";
+                lifespanEl.style.display = "";
+            } else {
+                lifespanEl.textContent = "";
+                lifespanEl.style.display = "none";
+            }
+        }
+
         // Gather button
         const gatherBtn = document.getElementById("gather-btn");
-        const unitTile = state.map[state.unit.row][state.unit.col];
-        gatherBtn.disabled = !(unitTile.resource === "rocks");
+        gatherBtn.disabled = !canUnitHarvest(unit);
 
         // Build Rock Hovel button
         var buildBtn = document.getElementById("build-hovel-btn");
-        var hasStructureOnTile = getStructureAt(state.unit.row, state.unit.col) !== null;
+        var hasStructureOnTile = getStructureAt(unit.row, unit.col) !== null;
         buildBtn.disabled = state.resources.rocks < 10 || hasStructureOnTile;
 
         // Build Solar Panel button
@@ -493,6 +619,10 @@
         // Build Subpar Battery button
         var batteryBtn = document.getElementById("build-battery-btn");
         batteryBtn.disabled = !canBuildSubparBattery();
+
+        // Build Rocktimus button
+        var rocktimusBtn = document.getElementById("build-rocktimus-btn");
+        rocktimusBtn.disabled = !canBuildRocktimus();
 
         // Tile info
         updateTileInfo();
@@ -507,7 +637,7 @@
         const tile = state.selectedTile;
         const terrainName = tile.terrain.charAt(0).toUpperCase() + tile.terrain.slice(1);
         const resourceText = tile.resource ? "Rocks" : "None";
-        const hasUnit = tile.row === state.unit.row && tile.col === state.unit.col;
+        var unitOnTile = getUnitAt(tile.row, tile.col);
         var tileStructure = getStructureAt(tile.row, tile.col);
         var structureText = "None";
         var energyText = "";
@@ -528,19 +658,12 @@
             var dirLabel = stormInfo.direction.charAt(0).toUpperCase() + stormInfo.direction.slice(1);
             stormText = '<div><strong>Dust Storm:</strong> Moving ' + dirLabel + '</div>';
         }
-        // Robot on tile
-        var robotOnTile = getRobotAt(tile.row, tile.col);
-        var robotText = robotOnTile ? '<div><strong>Unit:</strong> Rocktimus Robot</div>' : "";
-        el.innerHTML = `
-            <div><strong>Terrain:</strong> ${terrainName}</div>
-            <div><strong>Position:</strong> (${tile.col}, ${tile.row})</div>
-            <div><strong>Resource:</strong> ${resourceText}</div>
-            <div><strong>Structure:</strong> ${structureText}</div>
-            ${energyText}
-            ${stormText}
-            ${hasUnit ? '<div><strong>Unit:</strong> ' + state.unit.name + '</div>' : ""}
-            ${robotText}
-        `;
+        var unitText = unitOnTile ? '<div><strong>Unit:</strong> ' + unitOnTile.name + '</div>' : "";
+        el.innerHTML = '<div><strong>Terrain:</strong> ' + terrainName + '</div>' +
+            '<div><strong>Position:</strong> (' + tile.col + ', ' + tile.row + ')</div>' +
+            '<div><strong>Resource:</strong> ' + resourceText + '</div>' +
+            '<div><strong>Structure:</strong> ' + structureText + '</div>' +
+            energyText + stormText + unitText;
     }
 
     function addLog(message, type) {
@@ -559,7 +682,7 @@
     // --------------- Game Actions ---------------
     function moveUnit(targetRow, targetCol) {
         if (state.gameOver) return;
-        const unit = state.unit;
+        const unit = getSelectedUnit();
         if (unit.movesLeft <= 0) return;
 
         const dr = Math.abs(targetRow - unit.row);
@@ -568,31 +691,33 @@
         // Must be adjacent (including diagonal)
         if (dr > 1 || dc > 1 || (dr === 0 && dc === 0)) return;
 
-        // Bounds check
-        if (targetRow < 0 || targetRow >= MAP_ROWS || targetCol < 0 || targetCol >= MAP_COLS) return;
+        if (!isInBounds(targetRow, targetCol)) return;
+
+        // Cannot move onto a tile occupied by another unit
+        if (getUnitAt(targetRow, targetCol)) return;
 
         unit.row = targetRow;
         unit.col = targetCol;
         unit.movesLeft--;
 
-        addLog(`Elon moved to (${targetCol}, ${targetRow})`, "move");
+        addLog(unit.name + " moved to (" + targetCol + ", " + targetRow + ")", "move");
 
         state.selectedTile = state.map[targetRow][targetCol];
-        render();
-        updateUI();
+        refreshView();
     }
 
     function gatherResource() {
-        const tile = state.map[state.unit.row][state.unit.col];
-        if (tile.resource !== "rocks") return;
+        var unit = getSelectedUnit();
+        if (!canUnitHarvest(unit)) return;
+        var tile = state.map[unit.row][unit.col];
+        var resourceType = tile.resource;
 
         tile.resource = null;
-        state.resources.rocks++;
+        state.resources[resourceType]++;
+        var label = resourceType.charAt(0).toUpperCase() + resourceType.slice(1);
+        addLog(unit.name + " gathered " + label + "! (Total: " + state.resources[resourceType] + ")", "gather");
 
-        addLog(`Elon gathered Rocks! (Total: ${state.resources.rocks})`, "gather");
-
-        render();
-        updateUI();
+        refreshView();
     }
 
     function getStructureAt(row, col) {
@@ -606,7 +731,7 @@
 
     function buildRockHovel() {
         if (state.resources.rocks < 10) return;
-        var unit = state.unit;
+        var unit = getSelectedUnit();
         if (getStructureAt(unit.row, unit.col) !== null) return;
 
         state.resources.rocks -= 10;
@@ -617,10 +742,9 @@
             energy: 0,
         });
 
-        addLog("Elon built a Rock Hovel at (" + unit.col + ", " + unit.row + ")", "build");
+        addLog(unit.name + " built a Rock Hovel at (" + unit.col + ", " + unit.row + ")", "build");
 
-        render();
-        updateUI();
+        refreshView();
     }
 
     function getAdjacentStructures(row, col, type) {
@@ -630,7 +754,7 @@
                 if (dr === 0 && dc === 0) continue;
                 var nr = row + dr;
                 var nc = col + dc;
-                if (nr < 0 || nr >= MAP_ROWS || nc < 0 || nc >= MAP_COLS) continue;
+                if (!isInBounds(nr, nc)) continue;
                 var s = getStructureAt(nr, nc);
                 if (s && s.type === type) results.push(s);
             }
@@ -658,7 +782,7 @@
     }
 
     function canBuildSolarPanel() {
-        var unit = state.unit;
+        var unit = getSelectedUnit();
         if (state.resources.rocks < 2) return false;
         if (getStructureAt(unit.row, unit.col) !== null) return false;
         var hovels = getAdjacentStructures(unit.row, unit.col, "rock_hovel");
@@ -667,7 +791,7 @@
 
     function buildSolarPanel() {
         if (!canBuildSolarPanel()) return;
-        var unit = state.unit;
+        var unit = getSelectedUnit();
 
         state.resources.rocks -= 2;
         state.structures.push({
@@ -676,14 +800,13 @@
             col: unit.col,
         });
 
-        addLog("Elon built a Solar Panel at (" + unit.col + ", " + unit.row + ")", "build");
+        addLog(unit.name + " built a Solar Panel at (" + unit.col + ", " + unit.row + ")", "build");
 
-        render();
-        updateUI();
+        refreshView();
     }
 
     function canBuildSubparBattery() {
-        var unit = state.unit;
+        var unit = getSelectedUnit();
         if (state.resources.energy < 2 || state.resources.rocks < 2) return false;
         if (getStructureAt(unit.row, unit.col) !== null) return false;
         var adjPanels = getAdjacentStructures(unit.row, unit.col, "solar_panel");
@@ -693,7 +816,7 @@
 
     function buildSubparBattery() {
         if (!canBuildSubparBattery()) return;
-        var unit = state.unit;
+        var unit = getSelectedUnit();
 
         state.resources.energy -= 2;
         state.resources.rocks -= 2;
@@ -703,12 +826,55 @@
             col: unit.col,
         });
 
-        addLog("Elon built a Subpar Battery at (" + unit.col + ", " + unit.row + ")", "build");
+        addLog(unit.name + " built a Subpar Battery at (" + unit.col + ", " + unit.row + ")", "build");
 
         render();
         updateUI();
     }
 
+    // --------------- Rocktimus Construction ---------------
+    function findAdjacentOpenTile(row, col) {
+        for (var dr = -1; dr <= 1; dr++) {
+            for (var dc = -1; dc <= 1; dc++) {
+                if (dr === 0 && dc === 0) continue;
+                var nr = row + dr;
+                var nc = col + dc;
+                if (!isInBounds(nr, nc)) continue;
+                if (getUnitAt(nr, nc)) continue;
+                if (getStructureAt(nr, nc)) continue;
+                return { row: nr, col: nc };
+            }
+        }
+        return null;
+    }
+
+    function canBuildRocktimus() {
+        var unit = getSelectedUnit();
+        var structure = getStructureAt(unit.row, unit.col);
+        if (!structure || structure.type !== "rock_hovel") return false;
+        if (state.resources.energy < 2) return false;
+        if (state.resources.rocks < 1) return false;
+        if (!findAdjacentOpenTile(unit.row, unit.col)) return false;
+        return true;
+    }
+
+    function buildRocktimus() {
+        if (!canBuildRocktimus()) return;
+        var unit = getSelectedUnit();
+
+        state.resources.energy -= 2;
+        state.resources.rocks -= 1;
+
+        var openTile = findAdjacentOpenTile(unit.row, unit.col);
+        var robot = createUnit("rocktimus", openTile.row, openTile.col);
+        state.units.push(robot);
+
+        addLog(unit.name + " constructed a Rocktimus Robot at (" + openTile.col + ", " + openTile.row + ")", "construct");
+
+        refreshView();
+    }
+
+    // --------------- Solar Panels ---------------
     function processSolarPanels() {
         var totalGenerated = 0;
         for (var i = 0; i < state.structures.length; i++) {
@@ -733,6 +899,31 @@
         }
     }
 
+    // --------------- Unit Degradation ---------------
+    function processUnitDegradation() {
+        for (var i = state.units.length - 1; i >= 0; i--) {
+            var unit = state.units[i];
+            if (unit.turnsRemaining === null) continue;
+            unit.turnsRemaining--;
+            if (unit.turnsRemaining <= 0) {
+                // Place degrade resource on tile
+                var def = UNIT_TYPES[unit.type];
+                if (def.degradeResource) {
+                    var tile = state.map[unit.row][unit.col];
+                    tile.resource = def.degradeResource.type;
+                }
+                addLog(unit.name + " has degraded at (" + unit.col + ", " + unit.row + ")", "degrade");
+                state.units.splice(i, 1);
+                // Adjust selectedUnit to track the same unit
+                if (i < state.selectedUnit) {
+                    state.selectedUnit--;
+                } else if (state.selectedUnit >= state.units.length) {
+                    state.selectedUnit = 0;
+                }
+            }
+        }
+    }
+
     // --------------- Dust Storm Logic ---------------
     function isUnitInHovel(row, col) {
         var structure = getStructureAt(row, col);
@@ -746,15 +937,6 @@
                 if (storm.tiles[j].row === row && storm.tiles[j].col === col) {
                     return storm;
                 }
-            }
-        }
-        return null;
-    }
-
-    function getRobotAt(row, col) {
-        for (var i = 0; i < state.robots.length; i++) {
-            if (state.robots[i].row === row && state.robots[i].col === col) {
-                return state.robots[i];
             }
         }
         return null;
@@ -852,35 +1034,39 @@
                 var tile = storm.tiles[j];
                 if (tile.row < 0 || tile.row >= MAP_ROWS || tile.col < 0 || tile.col >= MAP_COLS) continue;
 
-                // Check Elon Musk
-                if (!state.gameOver && state.unit.row === tile.row && state.unit.col === tile.col) {
-                    if (!isUnitInHovel(state.unit.row, state.unit.col)) {
-                        // Elon is destroyed - becomes Elon Bones
-                        state.unit.name = "Elon Bones";
-                        state.unit.movesLeft = 0;
-                        state.unit.movesMax = 0;
-                        state.gameOver = true;
-                        addLog("Elon Musk was consumed by the Dust Storm! Only bones remain... GAME OVER!", "storm");
-                    }
-                }
-
-                // Check Rocktimus Robots
-                var robotsToRemove = [];
-                for (var r = 0; r < state.robots.length; r++) {
-                    var robot = state.robots[r];
-                    if (robot.row === tile.row && robot.col === tile.col) {
-                        if (!isUnitInHovel(robot.row, robot.col)) {
-                            // Robot is destroyed, place Rock resource on tile
-                            var mapTile = state.map[robot.row][robot.col];
-                            mapTile.resource = "rocks";
-                            robotsToRemove.push(r);
-                            addLog("A Rocktimus Robot was destroyed by the Dust Storm at (" + robot.col + ", " + robot.row + ")! It crumbled back into rocks.", "storm");
+                // Check all units
+                var unitsToRemove = [];
+                for (var u = 0; u < state.units.length; u++) {
+                    var unit = state.units[u];
+                    if (unit.row === tile.row && unit.col === tile.col) {
+                        if (!isUnitInHovel(unit.row, unit.col)) {
+                            if (unit.type === "elon") {
+                                // Elon is destroyed - becomes Elon Bones
+                                unit.name = "Elon Bones";
+                                unit.movesLeft = 0;
+                                unit.movesMax = 0;
+                                state.gameOver = true;
+                                addLog("Elon Musk was consumed by the Dust Storm! Only bones remain... GAME OVER!", "storm");
+                            } else {
+                                // Non-elon unit is destroyed, place resource on tile
+                                var def = UNIT_TYPES[unit.type];
+                                if (def.degradeResource) {
+                                    var mapTile = state.map[unit.row][unit.col];
+                                    mapTile.resource = def.degradeResource.type;
+                                }
+                                unitsToRemove.push(u);
+                                addLog("A " + unit.name + " was destroyed by the Dust Storm at (" + unit.col + ", " + unit.row + ")!", "storm");
+                            }
                         }
                     }
                 }
-                // Remove destroyed robots (reverse order)
-                for (var r = robotsToRemove.length - 1; r >= 0; r--) {
-                    state.robots.splice(robotsToRemove[r], 1);
+                // Remove destroyed units (reverse order)
+                for (var u = unitsToRemove.length - 1; u >= 0; u--) {
+                    state.units.splice(unitsToRemove[u], 1);
+                }
+                // Clamp selectedUnit after removals
+                if (state.selectedUnit >= state.units.length) {
+                    state.selectedUnit = 0;
                 }
             }
         }
@@ -931,19 +1117,24 @@
         checkDustStormCollisions();
     }
 
+    // --------------- Turn ---------------
     function endTurn() {
         if (state.gameOver) return;
         state.turn++;
-        state.unit.movesLeft = state.unit.movesMax;
 
-        addLog(`--- Turn ${state.turn} ---`, "turn");
+        // Reset moves for all units
+        for (var i = 0; i < state.units.length; i++) {
+            state.units[i].movesLeft = state.units[i].movesMax;
+        }
+
+        addLog("--- Turn " + state.turn + " ---", "turn");
 
         processSubparBatteryExplosions();
+        processUnitDegradation();
         processSolarPanels();
         processDustStorms();
 
-        render();
-        updateUI();
+        refreshView();
     }
 
     function toggleHotkeyModal() {
@@ -958,7 +1149,7 @@
         const y = e.clientY - rect.top;
         const col = Math.floor(x / TILE_SIZE);
         const row = Math.floor(y / TILE_SIZE);
-        if (row >= 0 && row < MAP_ROWS && col >= 0 && col < MAP_COLS) {
+        if (isInBounds(row, col)) {
             return state.map[row][col];
         }
         return null;
@@ -968,18 +1159,29 @@
         const tile = getTileFromClick(e);
         if (!tile) return;
 
-        const unit = state.unit;
+        // Check if clicked tile has a unit — select it
+        var clickedUnit = getUnitAt(tile.row, tile.col);
+        if (clickedUnit) {
+            var idx = state.units.indexOf(clickedUnit);
+            if (idx !== -1) {
+                state.selectedUnit = idx;
+                state.selectedTile = tile;
+                refreshView();
+                return;
+            }
+        }
+
+        // Otherwise, try to move the selected unit
+        const unit = getSelectedUnit();
         const dr = Math.abs(tile.row - unit.row);
         const dc = Math.abs(tile.col - unit.col);
 
-        // If clicking an adjacent tile and have moves, move there
         if (dr <= 1 && dc <= 1 && !(dr === 0 && dc === 0) && unit.movesLeft > 0) {
             moveUnit(tile.row, tile.col);
         } else {
             // Just select the tile
             state.selectedTile = tile;
-            render();
-            updateUI();
+            refreshView();
         }
     });
 
@@ -1000,6 +1202,10 @@
         if (state.gameOver) return;
         buildSubparBattery();
     });
+    document.getElementById("build-rocktimus-btn").addEventListener("click", function () {
+        if (state.gameOver) return;
+        buildRocktimus();
+    });
     document.getElementById("close-hotkey-modal").addEventListener("click", toggleHotkeyModal);
 
     // Keyboard controls
@@ -1015,7 +1221,7 @@
         if (state.hotkeyModalOpen) return;
         if (state.gameOver) return;
 
-        const unit = state.unit;
+        const unit = getSelectedUnit();
         let dr = 0;
         let dc = 0;
 
@@ -1048,6 +1254,18 @@
             case "t":
                 buildSubparBattery();
                 return;
+            case "r":
+                buildRocktimus();
+                return;
+            case "Tab":
+                e.preventDefault();
+                if (state.units.length > 1) {
+                    state.selectedUnit = (state.selectedUnit + 1) % state.units.length;
+                    var sel = getSelectedUnit();
+                    state.selectedTile = state.map[sel.row][sel.col];
+                    refreshView();
+                }
+                return;
             case "Enter":
             case "e":
                 endTurn();
@@ -1063,7 +1281,9 @@
     // --------------- Initialization ---------------
     function init() {
         state.map = generateMap();
-        state.unit = placeUnit(state.map);
+        var elonUnit = placeUnit(state.map);
+        state.units = [elonUnit];
+        state.selectedUnit = 0;
         state.turn = 1;
         state.resources = { rocks: 0, energy: 0 };
         state.structures = [];
@@ -1072,7 +1292,7 @@
         state.dustStormIdCounter = 0;
         state.gameOver = false;
         state.logs = [];
-        state.selectedTile = state.map[state.unit.row][state.unit.col];
+        state.selectedTile = state.map[elonUnit.row][elonUnit.col];
 
         // Schedule first dust storm within the first 10 turns
         state.nextStormTurn = 1 + Math.floor(Math.random() * DUST_STORM_FIRST_MAX_TURN);
@@ -1080,8 +1300,7 @@
         resizeCanvas();
         addLog("Elon has crash-landed on Mars!", "turn");
         addLog("--- Turn 1 ---", "turn");
-        render();
-        updateUI();
+        refreshView();
     }
 
     init();

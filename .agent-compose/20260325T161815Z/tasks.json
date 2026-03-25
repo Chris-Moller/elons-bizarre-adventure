@@ -1,0 +1,282 @@
+{
+  "quality": "full",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Implement Rocktimus Robot with multi-unit architecture",
+      "description": "Refactor the single-unit game into a multi-unit system with a unit registry/factory, then add the Rocktimus Robot unit type with construction, movement, harvesting, degradation, and rendering. All changes span game.js, index.html, and style.css.",
+      "acceptance_criteria": "1. Elon can construct a Rocktimus Robot at a Rock Hovel by spending 2 Energy and 1 Rock (cost validation enforced).\n2. The Rocktimus Robot can move up to 5 tiles per turn.\n3. The Rocktimus Robot can harvest Rock resources using generalized harvesting logic.\n4. After 5 turns, the Rocktimus Robot automatically degrades and places 1 Rock at its tile.\n5. The UI displays the Rocktimus Robot with a distinct sprite, shows its remaining lifespan, and supports selecting/commanding it alongside Elon.\n6. Multiple Rocktimus Robots can coexist on the map simultaneously.\n7. The unit registry/factory system supports adding future unit types without major refactoring.",
+      "claudeMd": "# Project Context\n\nYou are implementing a multi-unit system and the Rocktimus Robot unit for a vanilla JS canvas game (\"Elon's Bizarre Adventure\"). There is NO build system, NO framework, NO TypeScript, NO package.json. The entire game is three files: `game.js` (IIFE), `index.html`, `style.css`.\n\n## Architecture Overview\n\nThe game is a turn-based Mars strategy game. Currently there is a single unit (Elon Musk) stored as `state.unit`. You must refactor to `state.units` (array) + `state.selectedUnit` (index) and add the Rocktimus Robot.\n\n## Implementation Order (CRITICAL — follow this sequence)\n\n### Phase 1: Unit Registry & Factory (game.js)\n1. Add `UNIT_TYPES` registry object near the top constants:\n```js\nconst UNIT_TYPES = {\n    elon: {\n        name: \"Elon Musk\",\n        movesPerTurn: 2,\n        canHarvest: [\"rocks\"],\n        lifespan: null,\n        degradeResource: null,\n        buildCost: null,\n    },\n    rocktimus: {\n        name: \"Rocktimus Robot\",\n        movesPerTurn: 5,\n        canHarvest: [\"rocks\"],\n        lifespan: 5,\n        degradeResource: { type: \"rocks\", amount: 1 },\n        buildCost: { energy: 2, rocks: 1 },\n    },\n};\n```\n2. Add `createUnit(type, row, col)` factory function that reads from `UNIT_TYPES` and returns:\n```js\n{ type, name, row, col, movesLeft, movesMax, turnsRemaining (null or number) }\n```\n\n### Phase 2: Multi-Unit State Refactor (game.js)\n3. Change `state.unit` → `state.units` (array) + `state.selectedUnit` (index, starts at 0).\n4. Add helper: `getSelectedUnit()` returns `state.units[state.selectedUnit]`.\n5. Replace ALL references to `state.unit` with `getSelectedUnit()` throughout:\n   - `moveUnit()` — use `getSelectedUnit()`\n   - `gatherResource()` — use `getSelectedUnit()`\n   - `buildRockHovel()` — use `getSelectedUnit()`\n   - `canBuildSolarPanel()` / `buildSolarPanel()` — use `getSelectedUnit()`\n   - `drawMoveRange()` — use `getSelectedUnit()`\n   - `render()` — iterate `state.units` to draw all units\n   - `updateUI()` — use `getSelectedUnit()`\n   - `updateTileInfo()` — check all units, not just one\n   - `endTurn()` — iterate all units to reset moves\n   - Canvas click handler — check if clicked tile has any unit\n   - Keyboard handler — use `getSelectedUnit()`\n   - `init()` — create `state.units = [createUnit(\"elon\", row, col)]`, `state.selectedUnit = 0`\n   - `placeUnit()` should now return a unit via `createUnit()`\n6. **TEST**: At this point Elon should work identically to before. Movement, gathering, building hovels, building solar panels, ending turns — all must function.\n\n### Phase 3: Unit Selection (game.js + index.html + style.css)\n7. Add Tab key handler to cycle `state.selectedUnit` through `state.units`.\n8. When clicking a tile that contains a unit, select that unit instead of moving.\n9. Update sidebar unit panel to show dynamic unit name, moves, and type.\n10. Add lifespan display: show \"Lifespan: X turns\" for units with finite `turnsRemaining` in the unit-info panel.\n\n### Phase 4: Rocktimus Robot Construction (game.js + index.html)\n11. Add `canBuildRocktimus()` function:\n    - Selected unit must be standing on a Rock Hovel\n    - Player must have >= 2 energy and >= 1 rock\n    - There must be an adjacent tile without a unit or structure on it\n12. Add `buildRocktimus()` function:\n    - Deduct 2 energy, 1 rock\n    - Find first adjacent open tile (no unit, no structure)\n    - `createUnit(\"rocktimus\", adjRow, adjCol)` and push to `state.units`\n    - Log the construction\n13. Add \"Build Rocktimus (2⚡ 1🪨)\" button in index.html action-panel.\n14. Wire button click and hotkey `R` to `buildRocktimus()`.\n15. Update `updateUI()` to enable/disable the button.\n\n### Phase 5: Generalized Harvesting (game.js)\n16. Refactor `gatherResource()`: instead of hardcoded `tile.resource === \"rocks\"`, check `UNIT_TYPES[unit.type].canHarvest.includes(tile.resource)`.\n17. Update gather button enable/disable in `updateUI()` to use the same check.\n\n### Phase 6: Turn-Based Degradation (game.js)\n18. Add `processUnitDegradation()` function called in `endTurn()`:\n    - Iterate `state.units` in reverse (to safely splice)\n    - For units with non-null `turnsRemaining`, decrement it\n    - If `turnsRemaining <= 0`: place degrade resource on tile, remove unit, log it\n    - If removed unit was selected or selectedUnit index is now out of bounds, reset `state.selectedUnit = 0`\n19. In `endTurn()`, call `processUnitDegradation()` after resetting all units' moves.\n\n### Phase 7: Rendering (game.js + style.css)\n20. Add `drawRocktimusRobot(unit)` function — a boxy metallic robot:\n    - Metallic gray (#888) rectangular body\n    - Orange/amber eyes (two small circles)\n    - Rocky texture details\n    - Label \"ROBO\" beneath\n    - Small lifespan badge (number) in corner\n21. Refactor `render()`: loop `state.units` and call type-specific draw functions:\n    - `elon` → `drawUnit(unit)` (existing)\n    - `rocktimus` → `drawRocktimusRobot(unit)`\n22. Selected unit gets bright highlight (yellow); unselected units get dimmer highlight.\n23. `drawMoveRange()` should handle variable movement range. Use BFS flood fill for reachable tiles within `movesLeft` steps (8-directional adjacency). This replaces the hardcoded 1-tile range check.\n24. Add CSS `.log-entry.construct` style for construction log entries (use a teal/cyan color like `#44ccaa`).\n25. Add CSS `.log-entry.degrade` style for degradation log entries (use a red/orange color like `#cc6644`).\n\n### Phase 8: Hotkey Table & Final Polish (index.html)\n26. Add to hotkey table: Tab → \"Cycle units\", R → \"Build Rocktimus Robot\".\n27. Verify all existing hotkeys still work.\n\n## Code Conventions (MUST FOLLOW)\n- The game is inside an IIFE: `(function () { \"use strict\"; ... })();`\n- Use `var` for structure-related code (matches existing pattern), `const`/`let` for newer features\n- Canvas drawing uses manual paths — no external sprite libraries\n- `ctx.textAlign = \"center\"` for labels, use `ctx.font = \"bold Npx sans-serif\"`\n- Helper `drawCircle(x, y, r)` exists — reuse it\n- Structures pattern: `{ type, row, col, ...extraFields }`\n- Log entries: `addLog(message, type)` where type maps to CSS class\n- Button IDs follow pattern: `build-xxx-btn`, action class: `action-btn`\n- `getStructureAt(row, col)` helper exists — reuse it\n- Add a similar `getUnitAt(row, col)` helper\n\n## Gotchas\n- When removing units from `state.units` during degradation, iterate in REVERSE to avoid index shifting bugs.\n- `state.selectedUnit` must always be valid. After removing a unit, clamp it to `[0, state.units.length - 1]`.\n- Elon (index 0) should never be removable — he has `lifespan: null`.\n- The `MOVES_PER_TURN` constant is currently 2 and used in `placeUnit()`. After refactoring, moves come from `UNIT_TYPES[type].movesPerTurn`, so `MOVES_PER_TURN` can be removed.\n- `updateTileInfo()` currently checks `tile.row === state.unit.row` — must check ALL units.\n- The canvas click handler tries to move if adjacent. With multi-unit, first check if the clicked tile has a unit (select it). If no unit on tile AND tile is adjacent to selected unit AND selected unit has moves, then move.\n- The `drawMoveRange()` function currently uses a simple -1/+1 loop. For 5-move units, you need BFS. But keep the visual subtle — use the same translucent blue overlay.\n- Resource deduction for building Rocktimus: energy costs come from `state.resources.energy`, NOT from hovel energy storage. Hovels store energy but the player's global energy pool is what gets spent.\n\n## Testing Approach\nThere are no automated tests. Manual verification:\n1. Open index.html in browser (or use the Dockerfile + nginx)\n2. Verify Elon can move, gather, build hovels, build solar panels, end turns\n3. Build a hovel, get energy from solar panels, then build a Rocktimus Robot\n4. Verify robot appears, can be selected (Tab), can move 5 tiles, can gather rocks\n5. End 5 turns and verify robot degrades into a rock resource\n6. Build multiple robots and verify they coexist",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Unit registry (UNIT_TYPES) and factory (createUnit) are defined with elon and rocktimus entries",
+          "steps": [
+            "Add UNIT_TYPES const object with elon and rocktimus definitions near top of game.js",
+            "Add createUnit(type, row, col) factory function that reads from UNIT_TYPES",
+            "Verify factory returns object with: type, name, row, col, movesLeft, movesMax, turnsRemaining"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t2",
+          "description": "Multi-unit state: state.unit replaced with state.units array and state.selectedUnit index",
+          "steps": [
+            "Replace state.unit with state.units (array) and state.selectedUnit (number) in state object",
+            "Add getSelectedUnit() helper that returns state.units[state.selectedUnit]",
+            "Replace every reference to state.unit with getSelectedUnit() throughout game.js",
+            "Update init() to use state.units = [createUnit('elon', row, col)] and state.selectedUnit = 0",
+            "Update endTurn() to iterate all units and reset their movesLeft",
+            "Update render() to iterate state.units and draw each one",
+            "Verify Elon's basic gameplay still works: move, gather, build, end turn"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t3",
+          "description": "Unit selection works: Tab cycles units, clicking a unit selects it, UI reflects selected unit",
+          "steps": [
+            "Add getUnitAt(row, col) helper function",
+            "Modify canvas click handler: if clicked tile has a unit, select it; otherwise move if adjacent",
+            "Add Tab key handler in keydown listener to cycle state.selectedUnit",
+            "Update sidebar unit-info panel to dynamically show selected unit's name and moves",
+            "Add lifespan display in unit-info panel showing 'Lifespan: X turns' when applicable"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t4",
+          "description": "Rocktimus Robot construction: button, validation, resource deduction, unit spawning",
+          "steps": [
+            "Add canBuildRocktimus() function checking: unit on hovel, 2 energy, 1 rock, adjacent open tile",
+            "Add buildRocktimus() function: deduct resources, find adjacent tile, create unit, push to state.units",
+            "Add 'Build Rocktimus (2⚡ 1🪨)' button in index.html action-panel",
+            "Wire button click handler and hotkey R to buildRocktimus()",
+            "Update updateUI() to enable/disable the build-rocktimus button based on canBuildRocktimus()",
+            "Verify construction works: stand on hovel with sufficient resources, press R or click button"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t5",
+          "description": "Rocktimus Robot moves 5 tiles per turn",
+          "steps": [
+            "Verify createUnit('rocktimus') sets movesMax=5 from UNIT_TYPES",
+            "Select a Rocktimus Robot and verify it can make 5 moves before exhausting",
+            "Verify endTurn() resets Rocktimus movesLeft back to 5"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t6",
+          "description": "Generalized harvesting: both Elon and Rocktimus can gather rocks via canHarvest check",
+          "steps": [
+            "Refactor gatherResource() to check UNIT_TYPES[unit.type].canHarvest.includes(tile.resource)",
+            "Update gather button enable/disable in updateUI() to use the canHarvest check",
+            "Verify Elon can still gather rocks",
+            "Verify Rocktimus Robot can gather rocks"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t7",
+          "description": "Degradation: after 5 turns Rocktimus auto-degrades, places 1 Rock, is removed",
+          "steps": [
+            "Add processUnitDegradation() function iterating units in reverse",
+            "For units with turnsRemaining, decrement each turn; if <= 0, place resource and remove unit",
+            "Call processUnitDegradation() inside endTurn()",
+            "Verify selectedUnit is clamped to valid index after removal",
+            "Verify a Rocktimus built on turn N is gone by turn N+5 and a rock resource appears on its tile"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t8",
+          "description": "Rendering: distinct Rocktimus Robot sprite with lifespan badge, selection highlight",
+          "steps": [
+            "Add drawRocktimusRobot(unit) function with metallic gray body, orange eyes, ROBO label",
+            "Add lifespan badge (small number) on the robot sprite",
+            "Refactor render() to dispatch to correct draw function based on unit.type",
+            "Selected unit gets bright yellow highlight; unselected units get dimmer highlight",
+            "Verify both Elon and Rocktimus render correctly and distinctly on the map"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t9",
+          "description": "Movement range visualization uses BFS for variable-range units",
+          "steps": [
+            "Refactor drawMoveRange() to use BFS flood fill up to movesLeft steps (8-directional)",
+            "Verify Elon shows 1-tile range (2 moves available = all adjacent highlighted)",
+            "Verify Rocktimus shows larger reachable area when it has 5 moves"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t10",
+          "description": "Multiple Rocktimus Robots coexist on the map simultaneously",
+          "steps": [
+            "Build two or more Rocktimus Robots",
+            "Verify all appear on map with distinct positions",
+            "Verify Tab cycles through Elon + all robots",
+            "Verify each robot can be independently moved and commanded"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t11",
+          "description": "HTML updates: build button, hotkey table entries, dynamic unit panel",
+          "steps": [
+            "Add build-rocktimus-btn button in action-panel div in index.html",
+            "Add Tab and R hotkey entries in the hotkey-table in index.html",
+            "Update unit-info panel to have dynamic elements for name, moves, and lifespan",
+            "Add CSS styles for new button, log-entry.construct, log-entry.degrade classes"
+          ],
+          "passes": true
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "No remaining references to state.unit (singular) in the codebase — all replaced with multi-unit pattern",
+          "steps": [
+            "Grep game.js for 'state.unit' (not 'state.units') — should find zero matches",
+            "Verify getSelectedUnit() is used consistently"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q2",
+          "description": "UNIT_TYPES registry is the single source of truth for unit properties — no hardcoded values elsewhere",
+          "steps": [
+            "Check that movesPerTurn, canHarvest, lifespan, buildCost are read from UNIT_TYPES, not hardcoded",
+            "Verify MOVES_PER_TURN constant is removed or unused"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q3",
+          "description": "No dead code or commented-out old single-unit code remains",
+          "steps": [
+            "Verify placeUnit() either removed or refactored to use createUnit()",
+            "No commented-out blocks related to old state.unit"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q4",
+          "description": "Unit degradation handles edge cases: selectedUnit clamping, resource placement on occupied tile",
+          "steps": [
+            "Verify reverse iteration in processUnitDegradation()",
+            "Verify selectedUnit is clamped after unit removal",
+            "Verify Elon (lifespan: null) is never degraded"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q5",
+          "description": "Code style matches existing codebase conventions (IIFE, var/const/let patterns, canvas draw patterns)",
+          "steps": [
+            "Verify new code is inside the IIFE",
+            "Verify draw functions follow the same pattern as drawUnit/drawStructure",
+            "Verify button/action patterns match existing build-hovel-btn, build-solar-btn"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q6",
+          "description": "Adding a future unit type requires only a UNIT_TYPES entry and a draw function — no other changes",
+          "steps": [
+            "Review that construction, movement, harvesting, degradation all key off UNIT_TYPES",
+            "Verify render() dispatches by type without hardcoded if/else chains (or that adding a type is a single elif)"
+          ],
+          "passes": true
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": "echo 'No build step — static HTML/CSS/JS'",
+    "runCommand": "python3 -m http.server 3000",
+    "readySignal": "Serving HTTP",
+    "appType": "web",
+    "port": 3000,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Elon's existing gameplay works unchanged after multi-unit refactor",
+        "steps": [
+          "Open the game in browser at localhost:3000",
+          "Verify Elon appears on the map with label 'ELON'",
+          "Move Elon with WASD keys — verify 2 moves per turn",
+          "Navigate to a rock tile, press G to gather — verify rocks count increments",
+          "Collect 10 rocks, build a Rock Hovel (B key) — verify hovel appears",
+          "Collect 2 more rocks, build Solar Panel (P key) adjacent to hovel — verify panel appears",
+          "End turn (E key) — verify turn increments, moves reset, solar panel may generate energy"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v2",
+        "description": "Rocktimus Robot can be constructed at a Rock Hovel with correct resource cost",
+        "steps": [
+          "Have a Rock Hovel on the map and accumulate 2 energy + 1 rock",
+          "Stand Elon on the Rock Hovel",
+          "Press R or click 'Build Rocktimus' button",
+          "Verify a Rocktimus Robot appears on an adjacent tile",
+          "Verify resources deducted: energy reduced by 2, rocks reduced by 1",
+          "Verify construction fails if insufficient resources (button should be disabled)"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v3",
+        "description": "Rocktimus Robot moves 5 tiles per turn and can harvest rocks",
+        "steps": [
+          "Select the Rocktimus Robot (Tab or click on it)",
+          "Verify sidebar shows 'Rocktimus Robot' with Moves: 5/5",
+          "Move the robot 5 times — verify moves decrement to 0",
+          "Navigate robot to a rock tile, press G to gather",
+          "Verify rocks count increments and rock disappears from tile"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v4",
+        "description": "Rocktimus Robot degrades after 5 turns and leaves a rock resource",
+        "steps": [
+          "Note the Rocktimus Robot's position and lifespan display (should show 5)",
+          "End turn 5 times, watching the lifespan count down each turn",
+          "After the 5th end-turn, verify the robot disappears from the map",
+          "Verify a rock resource appears on the tile where the robot was",
+          "Verify selection automatically switches back to Elon"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v5",
+        "description": "Multiple Rocktimus Robots coexist and can be independently controlled",
+        "steps": [
+          "Build 2+ Rocktimus Robots (need enough resources)",
+          "Verify all robots visible on map with distinct positions",
+          "Tab through units — verify cycling through Elon and all robots",
+          "Move each robot independently — verify each has its own movesLeft counter",
+          "Verify each robot has its own lifespan countdown"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v6",
+        "description": "UI displays Rocktimus Robot distinctly with lifespan indicator",
+        "steps": [
+          "Verify Rocktimus Robot has a distinct sprite (metallic/gray, not Elon's spacesuit)",
+          "Verify the robot has a lifespan badge visible on the sprite or sidebar",
+          "Verify the sidebar unit-info panel shows 'Lifespan: X turns' when robot is selected",
+          "Verify the robot has 'ROBO' label (distinct from Elon's 'ELON' label)"
+        ],
+        "passes": false
+      }
+    ]
+  }
+}

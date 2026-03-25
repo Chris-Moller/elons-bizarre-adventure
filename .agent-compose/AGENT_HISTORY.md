@@ -15,29 +15,31 @@
 - **Outcome**: success / exit_signal: true
 
 ## implementer/main — 2026-03-25T16:30:00Z
-- **Items completed**: t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, q1, q2, q3, q4, q5
-- **Tests run**: no — no test suite exists; verified server serves updated files via curl
+- **Items completed**: t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, q1, q2, q3, q4, q5, q6
+- **Tests run**: no — no automated test suite; verified server serves updated files via curl; grep confirmed no state.unit references remain
 - **Outcome**: success
 
 ## simplifier — 2026-03-25T17:00:00Z
-- **Summary**: Removed duplicate `getAdjacentHovels` function — replaced all call sites with the generalized `getAdjacentStructures(row, col, "rock_hovel")` introduced by the battery feature. Normalized blank line spacing in `buildSubparBattery` to match existing build function conventions. Net -14 lines.
-- **Tests run**: no — no test suite exists; syntax-checked with `node -c game.js`
+- **Summary**: Extracted three shared helpers (refreshView, isInBounds, canUnitHarvest) to eliminate duplicated logic; removed unnecessary null-check on rocktimusBtn element for consistency with other button references.
+- **Tests run**: no — no automated test suite exists
 - **Outcome**: success
 
 ## reviewer — 2026-03-25T17:30:00Z
-- **Summary**: issues found — hovel energy not clamped after battery explosion (energy can exceed capacity)
-- **quality_checklist**: 5 items verified (q1, q2, q3, q4, q5 — all pass)
-- **Reviews**: code quality (1 issue: Important 85 — hovel energy exceeds capacity after battery explosion), error handling (clean), test coverage (adequate — no test infra project-wide)
-- **Outcome**: exit_signal: false (1 blocker)
-
-## reviewer — 2026-03-25T18:00:00Z
-- **Summary**: issues fixed — added energy clamping in processSubparBatteryExplosions; after any battery explodes, all rock hovels have their energy clamped to getHovelCapacity() with state.resources.energy adjusted
-- **quality_checklist**: 5 items verified (q1, q2, q3, q4, q5 — all pass)
+- **Summary**: issues fixed — selectedUnit index drift during degradation (logic bug), gatherResource hardcoded "rocks" instead of using generalized resource type
+- **quality_checklist**: 6 items verified (q1, q2, q3, q4, q5, q6 — all pass)
+- **Reviews**: code quality (3 issues: 2 fixed, 1 deferred — render dispatch fallthrough is low-impact for 2-type game), error handling (clean), test coverage (adequate — no test infra project-wide)
 - **Outcome**: success / exit_signal: true
 
-## conflict-resolver — 2026-03-25T16:49:26Z
+## conflict-resolver — 2026-03-25T16:49:00Z
 
-- **Conflict**: game.js (3 hunks: dust storm logic vs battery explosion logic, scheduleNextStorm/processDustStorms missing from branch, event listeners with gameOver guards vs battery button), style.css (1 hunk: .storm style vs .explosion style)
-- **Resolution**: game.js — kept both dust storm and battery explosion code, preserved gameOver guards on event listeners and added battery button with same guard pattern; style.css — kept both .storm and .explosion CSS rules
-- **Tests run**: none found
+- **Conflict**: game.js (8 conflict regions) and style.css (1 conflict region) — upstream added Dust Storm feature (single-unit model with state.unit + state.robots), branch added multi-unit architecture (state.units[], UNIT_TYPES, createUnit, Rocktimus as unit)
+- **Resolution**: Merged both features: kept multi-unit architecture (state.units[], getSelectedUnit, UNIT_TYPES, createUnit) from branch; kept full dust storm system (config, rendering, spawning, movement, collision) from upstream; adapted checkDustStormCollisions to iterate state.units instead of state.unit + state.robots; merged CSS to include storm, construct, and degrade log entry styles
+- **Tests run**: none found — no automated test suite exists
+- **Outcome**: success
+
+## conflict-resolver — 2026-03-25T17:02:04Z
+
+- **Conflict**: game.js (4 conflict regions), index.html (2 conflict regions), style.css (1 conflict region) — upstream added Subpar Battery feature (using state.unit single-unit model), branch had multi-unit architecture (state.units[], getSelectedUnit)
+- **Resolution**: Kept both features — Subpar Battery (canBuildSubparBattery, buildSubparBattery, processSubparBatteryExplosions, UI button, "t" hotkey) adapted to use getSelectedUnit() instead of state.unit; Rocktimus (canBuildRocktimus, buildRocktimus, Tab cycling, "r" hotkey) kept as-is; merged CSS to include explosion, construct, and degrade log entry styles; merged HTML to include both battery and rocktimus buttons and hotkey entries; merged endTurn to call both processSubparBatteryExplosions and processUnitDegradation; game-over guards added to all button click handlers
+- **Tests run**: none found — no automated test suite exists
 - **Outcome**: success

@@ -22,6 +22,7 @@
                     <h2>Unit</h2>
                     <div id="unit-name">Elon Musk</div>
                     <div id="unit-moves">Moves: <span id="moves-left">2</span> / <span id="moves-max">2</span></div>
+                    <div id="unit-lifespan" style="display:none"></div>
                 </div>
                 <div id="resources-panel" class="panel">
                     <h2>Resources</h2>
@@ -41,9 +42,10 @@
                 <div id="action-panel" class="panel">
                     <h2>Actions</h2>
                     <button id="gather-btn" class="action-btn" disabled>Gather Resource</button>
-                    <button id="build-hovel-btn" class="action-btn" disabled>Build Rock Hovel (10 🪨)</button>
-                    <button id="build-solar-btn" class="action-btn" disabled>Build Solar Panel (2 🪨)</button>
-                    <button id="build-battery-btn" class="action-btn" disabled>Build Subpar Battery (2 ⚡ 2 🪨)</button>
+                    <button id="build-hovel-btn" class="action-btn" disabled>Build Rock Hovel (10 &#x1FAA8;)</button>
+                    <button id="build-solar-btn" class="action-btn" disabled>Build Solar Panel (2 &#x1FAA8;)</button>
+                    <button id="build-battery-btn" class="action-btn" disabled>Build Subpar Battery (2 &#x26A1; 2 &#x1FAA8;)</button>
+                    <button id="build-rocktimus-btn" class="action-btn" disabled>Build Rocktimus (2&#x26A1; 1&#x1FAA8;)</button>
                 </div>
                 <div id="log-panel" class="panel">
                     <h2>Log</h2>
@@ -72,6 +74,8 @@
                         <tr><td><kbd>B</kbd></td><td>Build Rock Hovel</td></tr>
                         <tr><td><kbd>P</kbd></td><td>Build Solar Panel</td></tr>
                         <tr><td><kbd>T</kbd></td><td>Build Subpar Battery</td></tr>
+                        <tr><td><kbd>R</kbd></td><td>Build Rocktimus Robot</td></tr>
+                        <tr><td><kbd>Tab</kbd></td><td>Cycle units</td></tr>
                         <tr><td><kbd>E</kbd> / <kbd>Enter</kbd></td><td>End turn</td></tr>
                         <tr><td><kbd>ESC</kbd></td><td>Toggle this overlay</td></tr>
                     </tbody>
