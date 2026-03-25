@@ -16,7 +16,7 @@
             "Add `maxHealth: 100` as the last property of the elon entry",
             "Verify the comma-separated syntax is correct"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t2",
@@ -26,7 +26,7 @@
             "Add `maxHealth: 50` as the last property",
             "Verify the comma-separated syntax is correct"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t3",
@@ -36,7 +36,7 @@
             "Add `health: def.maxHealth,` and `maxHealth: def.maxHealth,` to the returned object after turnsRemaining",
             "Verify the object literal syntax is correct"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t4",
@@ -46,7 +46,7 @@
             "Add a #unit-health div between #unit-moves and #unit-lifespan with spans for health-current and health-max",
             "Verify the HTML is well-formed"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t5",
@@ -56,7 +56,7 @@
             "After the moves-max update line, add lines to set health-current and health-max textContent from unit.health and unit.maxHealth",
             "Verify the DOM IDs match the HTML"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t6",
@@ -66,7 +66,7 @@
             "Add a #unit-health rule after #unit-lifespan with color: #cc4444, font-size: 0.85rem, margin-top: 2px",
             "Verify it matches the visual pattern of adjacent rules"
           ],
-          "passes": false
+          "passes": true
         }
       ],
       "quality_checklist": [
@@ -77,7 +77,7 @@
             "Grep for 'maxHealth' and 'health' in game.js — verify naming matches the movesLeft/movesMax pattern",
             "Verify HTML span IDs (health-current, health-max) are referenced correctly in JS"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q2",
@@ -87,7 +87,7 @@
             "Confirm no combat/damage logic was introduced",
             "Check that only the minimum required lines were added"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q3",
@@ -97,7 +97,7 @@
             "Check indentation matches surrounding code (4-space base, 8-space inside functions)",
             "Confirm CSS rule follows the same structure as #unit-moves and #unit-lifespan"
           ],
-          "passes": false
+          "passes": true
         }
       ]
     }
