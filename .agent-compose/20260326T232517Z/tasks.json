@@ -1,0 +1,66 @@
+{
+  "quality": "skip",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Hide action panel during intro dialog",
+      "description": "Add a guard in updateUI() to hide the #action-panel element when state.introDialogOpen is true, and show it otherwise.",
+      "acceptance_criteria": "The action panel (all action buttons) is not visible while the intro dialog is displayed. Once the intro dialog is dismissed, the action panel appears normally with correct button states.",
+      "claudeMd": "# Hide Actions During Intro Dialog\n\nYou are fixing a vanilla JS browser game (single file: game.js, ~1960 lines).\n\n## What to change\n\nIn `updateUI()` (around line 809 in game.js), the function shows/hides individual action buttons. Add a check at the START of the action-button section:\n\n1. Get the `action-panel` element: `document.getElementById('action-panel')`\n2. If `state.introDialogOpen` is truthy, set `actionPanel.style.display = 'none'` and skip the rest of the action logic (return early from that section or wrap in else)\n3. Otherwise, set `actionPanel.style.display = ''` and let existing logic run\n\n## Key state\n- `state.introDialogOpen` — starts `true` (line 93), set to `false` when user clicks Begin button or presses X\n- `updateUI()` is called on every game tick/action, so the panel will reappear automatically after dismissal\n\n## Conventions\n- Vanilla JS, no framework. Uses `var` not `let/const`. Match existing style.\n- Inline `style.display` toggling (not CSS classes) — match the pattern used for individual buttons\n- No over-engineering. Minimal diff.",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Action panel is hidden when intro dialog is open",
+          "steps": [
+            "In game.js updateUI(), before the action button visibility block (~line 809), add code to hide #action-panel when state.introDialogOpen is true",
+            "Verify by reading the code that the panel display is set to 'none' when introDialogOpen is true"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t2",
+          "description": "Action panel reappears after intro dialog is dismissed",
+          "steps": [
+            "Verify the code sets action-panel display back to '' when introDialogOpen is false",
+            "Verify updateUI() is called after dismissIntroDialog (it is — existing flow handles this)"
+          ],
+          "passes": false
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "Change is minimal and matches existing code style",
+          "steps": [
+            "Check that only game.js was modified",
+            "Check that var is used (not let/const)",
+            "Check that the diff is under 10 lines"
+          ],
+          "passes": false
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": null,
+    "runCommand": "python3 -m http.server 3000",
+    "readySignal": "Serving HTTP",
+    "appType": "web",
+    "port": 3000,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Action panel is hidden during intro dialog and visible after dismissing it",
+        "steps": [
+          "Open the game in browser at localhost:3000",
+          "Verify the intro dialog is displayed",
+          "Verify the action panel (Gather Resource, Build Rock Hovel, etc.) is NOT visible",
+          "Click the Begin button to dismiss the intro dialog",
+          "Verify the action panel is now visible with appropriate buttons"
+        ],
+        "passes": false
+      }
+    ]
+  }
+}
