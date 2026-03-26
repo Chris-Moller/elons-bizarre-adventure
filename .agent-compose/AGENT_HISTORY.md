@@ -88,3 +88,9 @@
 - **Summary**: Deduplicated solar panel label rendering — extracted shared ctx.font/ctx.textAlign out of dusty/clean branches, using ternaries for the differing fillStyle and label text only.
 - **Tests run**: yes — node --check game.js passed
 - **Outcome**: success
+
+## reviewer — 2026-03-26T21:00:00Z
+- **Summary**: issues fixed — removed duplicate canCallEarth()/callEarth() stub functions (lines 1248-1262) that shadowed the correct implementations (lines 1170-1203) due to JS function hoisting
+- **quality_checklist**: 4 items verified (q1, q2, q3, q4 — all pass)
+- **Reviews**: code quality (1 issue fixed: duplicate canCallEarth/callEarth definitions from conflict resolution), error handling (clean — synchronous codebase), test coverage (adequate — no test infra project-wide)
+- **Outcome**: success / exit_signal: true

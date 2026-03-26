@@ -1244,23 +1244,6 @@
         refreshView();
     }
 
-    // --------------- Call Earth Action ---------------
-    function canCallEarth() {
-        if (state.gameOver) return false;
-        if (state.contactedEarth) return false;
-        var unit = getSelectedUnit();
-        var structure = getStructureAt(unit.row, unit.col);
-        if (!structure || structure.type !== "comm_dish") return false;
-        return true;
-    }
-
-    function callEarth() {
-        if (!canCallEarth()) return;
-        state.contactedEarth = true;
-        addLog("Elon contacted Earth! A new blueprint has been received...", "build");
-        refreshView();
-    }
-
     // --------------- Mars Throne Construction ---------------
     function canBuildMarsThrone() {
         if (state.gameOver) return false;
