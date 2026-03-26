@@ -106,3 +106,8 @@
 - **Items completed**: t1, t2, t3, t4, t5, q1, q2, q3
 - **Tests run**: yes — node --check game.js passed, HTTP 200 smoke test passed
 - **Outcome**: success
+
+## simplifier — 2026-03-26T21:20:00Z
+- **Summary**: Replaced splice(0,1) with shift() and splice(length-1,1) with pop() in dust storm shrinkage logic for idiomatic JS
+- **Tests run**: yes — node --check game.js passed
+- **Outcome**: success
