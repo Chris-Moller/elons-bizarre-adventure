@@ -15,7 +15,7 @@
             "Add <canvas id='call-earth-animation' class='call-earth-canvas hidden' width='360' height='240'></canvas> inside #call-earth-dialog .modal-content, between the modal-header div and the call-earth-message paragraph",
             "Verify the canvas element is inside .modal-content and before #call-earth-message"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t2",
@@ -26,7 +26,7 @@
             "Add .call-earth-canvas.hidden { display: none; } rule",
             "Verify styles don't conflict with existing modal-content layout"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t3",
@@ -38,7 +38,7 @@
             "Store animation frame ID in a cancellable variable (e.g. contactEarthAnimFrame)",
             "Call refreshView or cleanup on completion"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t4",
@@ -49,7 +49,7 @@
             "In the failure branch, ensure canvas has 'hidden' class",
             "Verify existing message text assignment is preserved"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t5",
@@ -59,7 +59,7 @@
             "Add 'hidden' class to the canvas element",
             "Verify dialog close still works correctly"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t6",
@@ -69,7 +69,7 @@
             "Verify close button click handler still works",
             "Confirm animation cancels cleanly on close without errors"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t7",
@@ -79,7 +79,7 @@
             "Confirm the failure message text still displays correctly",
             "Confirm no visual changes to the failure dialog"
           ],
-          "passes": false
+          "passes": true
         }
       ],
       "quality_checklist": [
@@ -91,7 +91,7 @@
             "Check that DOM access uses getElementById",
             "Verify no unused variables or dead code paths"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q2",
@@ -101,7 +101,7 @@
             "Check that the animation frame ID variable is properly scoped and accessible",
             "Confirm no orphaned requestAnimationFrame loops can occur"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q3",
@@ -111,7 +111,7 @@
             "Verify all drawing operations use appropriate save/restore for context state",
             "Check that colors and dimensions are consistent with the game's visual style"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q4",
@@ -121,7 +121,7 @@
             "Check that modal-content layout isn't broken by the canvas addition",
             "Verify other dialogs (intro, throne, hotkey) are unaffected"
           ],
-          "passes": false
+          "passes": true
         }
       ]
     }
@@ -144,7 +144,7 @@
           "Verify the existing message text appears as subtitle below the animation",
           "Verify animation runs for approximately 2-4 seconds"
         ],
-        "passes": false
+        "passes": true
       },
       {
         "id": "v2",
@@ -156,7 +156,7 @@
           "Trigger again and use close button instead",
           "Verify same behavior"
         ],
-        "passes": false
+        "passes": true
       },
       {
         "id": "v3",
@@ -166,7 +166,7 @@
           "Trigger callEarth()",
           "Verify dialog shows only the static message with no canvas animation visible"
         ],
-        "passes": false
+        "passes": true
       }
     ]
   }
