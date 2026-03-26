@@ -1,0 +1,113 @@
+{
+  "quality": "full",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Increase Contact Earth success rate and add multi-dish attempts",
+      "description": "Modify the Contact Earth mechanic in game.js: (1) change success probability from 1% to 5%, (2) update getAdjacentCommDish() to skip dishes already used this turn so that players with multiple Comm Dishes can attempt Contact Earth once per dish per turn.",
+      "acceptance_criteria": "1. Math.random() < 0.05 replaces Math.random() < 0.01 in callEarth(). 2. getAdjacentCommDish() skips dishes in commDishesUsedThisTurn, returning the first unused adjacent dish. 3. canCallEarth() returns true if any unused adjacent dish exists. 4. After a failed attempt, the Call Earth button re-enables if the player has another unused Comm Dish adjacent to the selected unit. 5. commDishesUsedThisTurn reset at turn start is preserved unchanged.",
+      "claudeMd": "# Project Context\n\nYou are modifying a vanilla JS browser game (single file: `game.js`, ~2260 lines). No framework, no build system.\n\n## What to Change\n\n### 1. Success Rate (line ~1231)\nChange `Math.random() < 0.01` to `Math.random() < 0.05` in the `callEarth()` function.\n\n### 2. Multi-Dish Logic (line ~1196-1222)\nModify `getAdjacentCommDish(unit)` to skip dishes that are already in `state.commDishesUsedThisTurn`. Currently it returns the first adjacent dish regardless of usage. Change it to:\n- Check on-tile dish first — if it exists AND is not in `commDishesUsedThisTurn`, return it\n- Then check adjacent tiles — skip any dish whose key (`row + \",\" + col`) is already in `commDishesUsedThisTurn`\n- Return `null` if all adjacent dishes have been used\n\nThis single change makes `canCallEarth()` and `callEarth()` work correctly for multi-dish without any other modifications, because:\n- `canCallEarth()` calls `getAdjacentCommDish()` and checks if result is non-null\n- `callEarth()` calls `getAdjacentCommDish()` to get the dish to use\n- `refreshView()` calls `canCallEarth()` to enable/disable the button\n\n### 3. Do NOT change\n- The `commDishesUsedThisTurn = []` reset in the end-turn/start-turn logic (~line 1746)\n- The HTML/CSS markup\n- The `refreshView()` button logic (it already calls `canCallEarth()` which will work correctly)\n\n## Conventions\n- Vanilla ES5-style JS (var, function declarations, no arrow functions, no let/const)\n- Use `indexOf` not `includes` for array membership checks\n- Match existing code style exactly\n\n## Verification\n- Open index.html in browser, build 2 Comm Dishes, position a unit adjacent to both\n- Attempt Call Earth — after failure, button should remain enabled if second dish is unused\n- After using both dishes, button should be disabled\n- Next turn, both dishes should be available again",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Change success probability from 1% to 5%",
+          "steps": [
+            "In game.js callEarth() function (~line 1231), change `Math.random() < 0.01` to `Math.random() < 0.05`",
+            "Verify no other occurrences of the 0.01 probability exist"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t2",
+          "description": "Modify getAdjacentCommDish() to skip used dishes",
+          "steps": [
+            "In getAdjacentCommDish() (~line 1196), add logic to check `state.commDishesUsedThisTurn` before returning a dish",
+            "For the on-tile check: compute dishKey and verify it's not in commDishesUsedThisTurn before returning",
+            "For the adjacent-tile loop: compute dishKey for each found dish and skip if already in commDishesUsedThisTurn",
+            "Return null if all adjacent dishes have been used this turn"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t3",
+          "description": "canCallEarth() correctly returns true when unused dishes remain",
+          "steps": [
+            "Read canCallEarth() and verify it works correctly with the updated getAdjacentCommDish()",
+            "Confirm: no changes needed to canCallEarth() itself — it already checks dish !== null"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t4",
+          "description": "Button re-enables after failed attempt with unused dish remaining",
+          "steps": [
+            "Read refreshView() Call Earth button logic and verify it calls canCallEarth()",
+            "Confirm: after callEarth() marks a dish as used and calls refreshView(), canCallEarth() will find the next unused dish",
+            "Verify no changes needed to refreshView()"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t5",
+          "description": "commDishesUsedThisTurn reset is preserved",
+          "steps": [
+            "Read the turn-start logic (~line 1746) and confirm commDishesUsedThisTurn = [] is unchanged",
+            "Verify the same reset in the game-reset function (~line 2259) is unchanged"
+          ],
+          "passes": true
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "getAdjacentCommDish() changes follow existing code style (var, indexOf, no ES6)",
+          "steps": ["Verify no let/const, no arrow functions, no Array.includes used in changes"],
+          "passes": true
+        },
+        {
+          "id": "q2",
+          "description": "No unnecessary changes outside the two target functions",
+          "steps": ["Check git diff to confirm only callEarth() and getAdjacentCommDish() were modified"],
+          "passes": true
+        },
+        {
+          "id": "q3",
+          "description": "Edge case: unit adjacent to only one dish that is already used returns null correctly",
+          "steps": ["Read through getAdjacentCommDish() logic to verify this case"],
+          "passes": true
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": null,
+    "runCommand": "python3 -m http.server 3000",
+    "readySignal": "Serving HTTP",
+    "appType": "web",
+    "port": 3000,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Success probability is 5% (code inspection)",
+        "steps": [
+          "Open game.js and search for 'Math.random() < 0.05' in callEarth()",
+          "Confirm the old 0.01 value no longer exists"
+        ],
+        "passes": true
+      },
+      {
+        "id": "v2",
+        "description": "Multi-dish attempts work — button re-enables after first failed attempt",
+        "steps": [
+          "Load index.html in browser",
+          "Build two Comm Dishes and position a unit adjacent to both",
+          "Click Call Earth — if it fails, verify the button is still enabled",
+          "Click Call Earth again — after second attempt, verify button is disabled",
+          "End turn and verify both dishes are available again"
+        ],
+        "passes": true
+      }
+    ]
+  }
+}
