@@ -1,5 +1,5 @@
 ## implementer/main — 2026-03-26T23:30:00Z
-- **Items completed**: t1, t2, t3, q1, v1
+- **Items completed**: t1, t2, q1
 - **Tests run**: yes — node --check game.js passed
 - **Outcome**: success
 
