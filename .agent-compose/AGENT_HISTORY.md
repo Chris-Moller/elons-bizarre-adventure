@@ -1,3 +1,9 @@
+## reviewer — 2026-03-26T23:20:00Z
+- **Summary**: clean — no critical issues found across code quality, error handling, and test coverage
+- **quality_checklist**: 3 items verified (q1, q2, q3 — all pass)
+- **Reviews**: code quality (clean — resource overwrite concern investigated but rocktimus degradeResource is also "rocks", hDef null guard matches existing pattern, one-structure-per-tile enforced), error handling (clean — synchronous codebase), test coverage (adequate — no test infra project-wide)
+- **Outcome**: success / exit_signal: true
+
 ## simplifier — 2026-03-26T23:10:00Z
 - **Summary**: Reviewed rock hovel collapse code in checkDustStormCollisions() — no meaningful simplifications found; code follows existing codebase patterns (unit destruction loop, reverse splice, selectedUnit clamp, var scoping, string concatenation, storm log type)
 - **Tests run**: yes — node --check game.js passed
