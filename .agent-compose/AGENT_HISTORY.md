@@ -106,3 +106,8 @@
 - **Items completed**: t1, t2, t3, t4, t5, q1, q2, q3
 - **Tests run**: yes — node --check game.js passed (syntax valid)
 - **Outcome**: success
+
+## simplifier — 2026-03-26T21:15:00Z
+- **Summary**: Removed redundant used-dish check in canCallEarth — getAdjacentCommDish already filters out used dishes, so the duplicate indexOf check was unnecessary
+- **Tests run**: yes — node --check game.js passed (syntax valid)
+- **Outcome**: success
