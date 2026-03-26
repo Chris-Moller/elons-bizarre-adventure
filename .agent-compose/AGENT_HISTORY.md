@@ -1,3 +1,8 @@
+## simplifier — 2026-03-26T23:10:00Z
+- **Summary**: Reviewed rock hovel collapse code in checkDustStormCollisions() — no meaningful simplifications found; code follows existing codebase patterns (unit destruction loop, reverse splice, selectedUnit clamp, var scoping, string concatenation, storm log type)
+- **Tests run**: yes — node --check game.js passed
+- **Outcome**: nothing to simplify
+
 ## implementer/main — 2026-03-26T22:56:00Z
 - **Items completed**: t1, t2, t3, t4, q1, q2, q3
 - **Tests run**: yes — node --check game.js passed, HTTP 200 smoke test passed
