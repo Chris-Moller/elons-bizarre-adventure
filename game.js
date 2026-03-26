@@ -806,6 +806,14 @@
             }
         }
 
+        // Hide the entire action panel while the intro dialog is open
+        var actionPanel = document.getElementById("action-panel");
+        if (state.introDialogOpen) {
+            actionPanel.style.display = "none";
+        } else {
+            actionPanel.style.display = "";
+        }
+
         // Show/hide action buttons based on whether the action is available
         var hasStructureOnTile = getStructureAt(unit.row, unit.col) !== null;
         var actions = [
