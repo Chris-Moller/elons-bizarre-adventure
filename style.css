@@ -413,6 +413,17 @@ kbd {
     display: none;
 }
 
+.call-earth-canvas {
+    display: block;
+    margin: 0 auto 12px;
+    border-radius: 4px;
+    max-width: 100%;
+}
+
+.call-earth-canvas.hidden {
+    display: none;
+}
+
 .call-earth-msg {
     font-size: 1rem;
     color: #88ccff;

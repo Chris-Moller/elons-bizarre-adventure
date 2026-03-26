@@ -1275,22 +1275,33 @@
         var dialogEl = document.getElementById("call-earth-dialog");
         var msgEl = document.getElementById("call-earth-message");
 
+        var animCanvasEl = document.getElementById("call-earth-animation");
+
         if (success) {
             state.contactedEarth = true;
             msgEl.textContent = "We hope you are enjoying your exile on Mars, Elon. No, we have not changed our minds.";
             addLog(unit.name + " contacted Earth from Comm Dish at (" + dish.col + ", " + dish.row + ")! They responded!", "comm");
+            animCanvasEl.classList.remove("hidden");
+            playContactEarthAnimation(animCanvasEl, null);
         } else {
             msgEl.textContent = "*nothing but static*";
             addLog(unit.name + " tried to call Earth from Comm Dish at (" + dish.col + ", " + dish.row + ")... nothing but static.", "comm");
+            animCanvasEl.classList.add("hidden");
         }
 
         state.callEarthDialogOpen = true;
         dialogEl.classList.remove("hidden");
+
         refreshView();
     }
 
     function closeCallEarthDialog() {
         state.callEarthDialogOpen = false;
+        if (contactEarthAnimFrame) {
+            cancelAnimationFrame(contactEarthAnimFrame);
+            contactEarthAnimFrame = null;
+        }
+        document.getElementById("call-earth-animation").classList.add("hidden");
         document.getElementById("call-earth-dialog").classList.add("hidden");
     }
 
@@ -2353,6 +2364,150 @@
         }
 
         requestAnimationFrame(animFrame);
+    }
+
+    var contactEarthAnimFrame = null;
+
+    function playContactEarthAnimation(canvasEl, onComplete) {
+        var ceCtx = canvasEl.getContext("2d");
+        var w = canvasEl.width;
+        var h = canvasEl.height;
+        var totalDuration = 3000;
+        var startTime = null;
+        var centerX = w / 2;
+        var emblemY = h * 0.32;
+        var emblemRadius = 28;
+
+        function drawBackground() {
+            ceCtx.fillStyle = "#0a1628";
+            ceCtx.fillRect(0, 0, w, h);
+        }
+
+        function drawEmblem() {
+            ceCtx.save();
+            ceCtx.translate(centerX, emblemY);
+
+            // Outer circle
+            ceCtx.strokeStyle = "#4b92db";
+            ceCtx.lineWidth = 2;
+            ceCtx.beginPath();
+            ceCtx.arc(0, 0, emblemRadius, 0, Math.PI * 2);
+            ceCtx.stroke();
+
+            // Crosshairs
+            ceCtx.beginPath();
+            ceCtx.moveTo(0, -emblemRadius + 4);
+            ceCtx.lineTo(0, emblemRadius - 4);
+            ceCtx.moveTo(-emblemRadius + 4, 0);
+            ceCtx.lineTo(emblemRadius - 4, 0);
+            ceCtx.stroke();
+
+            // Globe-like horizontal arcs
+            ceCtx.beginPath();
+            ceCtx.ellipse(0, 0, emblemRadius * 0.5, emblemRadius, 0, 0, Math.PI * 2);
+            ceCtx.stroke();
+            ceCtx.beginPath();
+            ceCtx.ellipse(0, 0, emblemRadius, emblemRadius * 0.5, 0, 0, Math.PI * 2);
+            ceCtx.stroke();
+
+            // Laurel arcs (left)
+            ceCtx.lineWidth = 1.5;
+            for (var i = 0; i < 5; i++) {
+                var angle = -Math.PI * 0.7 + i * 0.22;
+                var lx = Math.cos(angle) * (emblemRadius + 8);
+                var ly = Math.sin(angle) * (emblemRadius + 8);
+                ceCtx.beginPath();
+                ceCtx.ellipse(lx, ly, 4, 8, angle + Math.PI * 0.3, 0, Math.PI * 2);
+                ceCtx.stroke();
+            }
+            // Laurel arcs (right)
+            for (var j = 0; j < 5; j++) {
+                var angle2 = -Math.PI * 0.3 + j * 0.22;
+                var rx = Math.cos(angle2) * (emblemRadius + 8);
+                var ry = Math.sin(angle2) * (emblemRadius + 8);
+                ceCtx.beginPath();
+                ceCtx.ellipse(rx, ry, 4, 8, angle2 - Math.PI * 0.3, 0, Math.PI * 2);
+                ceCtx.stroke();
+            }
+
+            ceCtx.restore();
+        }
+
+        function drawSignalRings(progress) {
+            var ringCount = 4;
+            for (var i = 0; i < ringCount; i++) {
+                var ringDelay = i * 0.15;
+                var ringProgress = (progress - ringDelay) / (1 - ringDelay);
+                if (ringProgress < 0 || ringProgress > 1) continue;
+                var radius = emblemRadius + 10 + ringProgress * 80;
+                var alpha = Math.max(0, 1 - ringProgress) * 0.6;
+                ceCtx.strokeStyle = "rgba(75, 146, 219, " + alpha + ")";
+                ceCtx.lineWidth = Math.max(2 - ringProgress * 1.5, 0.3);
+                ceCtx.beginPath();
+                ceCtx.arc(centerX, emblemY, radius, 0, Math.PI * 2);
+                ceCtx.stroke();
+            }
+        }
+
+        function drawCouncilSilhouettes() {
+            var floorY = h * 0.78;
+            // Floor/podium area
+            ceCtx.fillStyle = "#2a3a4a";
+            ceCtx.fillRect(0, floorY, w, h - floorY);
+
+            // Seated figures
+            var figureCount = 7;
+            var spacing = w / (figureCount + 1);
+            ceCtx.fillStyle = "#1a2a3a";
+            for (var i = 0; i < figureCount; i++) {
+                var fx = spacing * (i + 1);
+                var bodyW = 14;
+                var bodyH = 20;
+                // Body (seated rectangle)
+                ceCtx.fillRect(fx - bodyW / 2, floorY - bodyH, bodyW, bodyH);
+                // Head (circle)
+                ceCtx.beginPath();
+                ceCtx.arc(fx, floorY - bodyH - 6, 6, 0, Math.PI * 2);
+                ceCtx.fill();
+            }
+        }
+
+        function drawText(progress) {
+            // Text fades in during the last second (last 1/3 of duration)
+            var textStart = 0.66;
+            if (progress < textStart) return;
+            var textAlpha = Math.min(1, (progress - textStart) / (1 - textStart));
+            ceCtx.save();
+            ceCtx.globalAlpha = textAlpha;
+            ceCtx.fillStyle = "#ffffff";
+            ceCtx.font = "bold 16px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+            ceCtx.textAlign = "center";
+            ceCtx.textBaseline = "middle";
+            ceCtx.fillText("TRANSMISSION RECEIVED", centerX, h * 0.6);
+            ceCtx.restore();
+        }
+
+        function animFrame(timestamp) {
+            if (!startTime) startTime = timestamp;
+            var elapsed = timestamp - startTime;
+            if (elapsed > totalDuration) elapsed = totalDuration;
+            var progress = elapsed / totalDuration;
+
+            drawBackground();
+            drawEmblem();
+            drawSignalRings(progress);
+            drawCouncilSilhouettes();
+            drawText(progress);
+
+            if (elapsed < totalDuration) {
+                contactEarthAnimFrame = requestAnimationFrame(animFrame);
+            } else {
+                contactEarthAnimFrame = null;
+                if (onComplete) onComplete();
+            }
+        }
+
+        contactEarthAnimFrame = requestAnimationFrame(animFrame);
     }
 
     // --------------- Initialization ---------------

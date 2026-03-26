@@ -1,0 +1,173 @@
+{
+  "quality": "full",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Add Contact Earth success animation",
+      "description": "Add a canvas-based animation to the Contact Earth success dialog depicting the UN Security Council receiving Elon's transmission. The animation plays inside the dialog modal above the existing message text, which becomes a subtitle. Failure dialogs remain unchanged.",
+      "acceptance_criteria": "1. Success dialog shows a canvas animation depicting UN Security Council scene\n2. Animation uses canvas API (no external libs)\n3. Existing success message preserved as subtitle below animation\n4. Animation runs 2-4 seconds, does not block dialog close\n5. X key and close button still dismiss dialog at any time\n6. Failure dialog ('nothing but static') unchanged",
+      "claudeMd": "# Contact Earth Animation Implementation\n\nYou are adding a canvas animation to the Contact Earth success dialog in a vanilla JS/HTML/CSS Mars colony game.\n\n## Tech Stack\n- Vanilla JS (ES5-ish style with `var`, IIFEs) — match existing code conventions in game.js\n- Single-file game.js (~2360 lines), index.html, style.css\n- No build system, no frameworks, no dependencies\n- Canvas 2D API for all rendering (see `playIntroAnimation` at game.js:2034 for the existing pattern)\n\n## Existing Dialog Pattern\n- Dialogs use `.modal-backdrop` + `.modal-content` with a `.modal-header` containing title and close button\n- Call Earth dialog: index.html:85-95, styled in style.css:402-422\n- `callEarth()` function at game.js:1267 — on success sets `state.contactedEarth = true` and shows message\n- `closeCallEarthDialog()` at game.js:1292 hides dialog\n- X key handler at game.js:1939 calls `closeCallEarthDialog()`\n\n## What to Implement\n\n### 1. index.html changes\nAdd a canvas element inside `#call-earth-dialog .modal-content`, between the header and the message paragraph:\n```html\n<canvas id=\"call-earth-animation\" class=\"call-earth-canvas hidden\" width=\"360\" height=\"240\"></canvas>\n```\n\n### 2. style.css changes\nAdd styles for `.call-earth-canvas`:\n- `display: block; margin: 0 auto 12px;` — centered above message\n- `border-radius: 4px;`\n- When `.hidden`, `display: none;`\n\n### 3. game.js changes\n\nAdd a `playContactEarthAnimation(canvasEl, onComplete)` function near the existing `playIntroAnimation` (~line 2033). Pattern after the intro animation's requestAnimationFrame loop.\n\n**Animation scene (render on the canvas):**\n1. **Background**: Dark navy (#0a1628) fill\n2. **UN emblem (simplified)**: A circle with crosshairs and laurel-like arcs in UN blue (#4b92db), centered in upper portion\n3. **Signal rings**: 3-4 concentric rings expanding outward from the emblem, fading as they grow — simulating a received transmission pulse\n4. **Council silhouettes**: 5-7 simple seated-figure shapes along the bottom (rectangles + circles for heads), in dark gray (#1a2a3a) against a slightly lighter floor\n5. **Text**: \"TRANSMISSION RECEIVED\" in white, fading in during the last second, centered\n6. Duration: ~3 seconds total\n\n**Modify `callEarth()` (game.js:1267):**\n- On success branch: after setting message text, show the canvas (remove `hidden` class), call `playContactEarthAnimation()`\n- On failure branch: ensure canvas stays hidden\n\n**Modify `closeCallEarthDialog()` (game.js:1292):**\n- Also add `hidden` class to the canvas and cancel any running animation (store the animation frame ID in a variable like `contactEarthAnimFrame`)\n\n## Conventions\n- Use `var` not `let`/`const` for new variables (matches existing game.js style, except for top-level const canvas/ctx)\n- Use `document.getElementById()` not querySelector\n- Keep animation self-contained — no global state beyond an animFrame ID for cancellation\n- Add CSS comments matching existing section pattern: `/* --------------- Section Name --------------- */`\n\n## Color Palette\n- Navy background: #0a1628\n- UN blue: #4b92db\n- Council silhouettes: #1a2a3a\n- Floor/podium: #2a3a4a\n- Signal rings: #4b92db with decreasing alpha\n- Text: #ffffff\n- Accent matching game: #d4a574 (optional warm highlight)\n\n## Important\n- The animation must NOT block closing the dialog. The close button and X key must work at any point during animation.\n- On dialog close, cancel the animation frame to prevent orphaned loops.\n- The failure case (static message) must show NO animation — canvas stays hidden.\n- Test by searching for `callEarth` and verifying both success and failure paths work.",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Add canvas element to call-earth-dialog in index.html",
+          "steps": [
+            "Add <canvas id='call-earth-animation' class='call-earth-canvas hidden' width='360' height='240'></canvas> inside #call-earth-dialog .modal-content, between the modal-header div and the call-earth-message paragraph",
+            "Verify the canvas element is inside .modal-content and before #call-earth-message"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t2",
+          "description": "Add CSS styles for the animation canvas",
+          "steps": [
+            "Add .call-earth-canvas styles in the Call Earth Dialog section of style.css",
+            "Include display:block, margin centering, border-radius, and max-width",
+            "Add .call-earth-canvas.hidden { display: none; } rule",
+            "Verify styles don't conflict with existing modal-content layout"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t3",
+          "description": "Implement playContactEarthAnimation function in game.js",
+          "steps": [
+            "Add function near playIntroAnimation (~line 2033) that takes a canvas element",
+            "Render dark navy background, simplified UN emblem with arcs/circle, expanding signal rings, council member silhouettes, and 'TRANSMISSION RECEIVED' text fade-in",
+            "Use requestAnimationFrame loop with ~3 second duration",
+            "Store animation frame ID in a cancellable variable (e.g. contactEarthAnimFrame)",
+            "Call refreshView or cleanup on completion"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t4",
+          "description": "Modify callEarth() to trigger animation on success",
+          "steps": [
+            "In the success branch of callEarth(), remove 'hidden' class from the canvas element",
+            "Call playContactEarthAnimation with the canvas element",
+            "In the failure branch, ensure canvas has 'hidden' class",
+            "Verify existing message text assignment is preserved"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t5",
+          "description": "Modify closeCallEarthDialog() to cancel animation and hide canvas",
+          "steps": [
+            "Add cancelAnimationFrame call for the stored frame ID",
+            "Add 'hidden' class to the canvas element",
+            "Verify dialog close still works correctly"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t6",
+          "description": "Dialog close behavior works during animation",
+          "steps": [
+            "Verify X key handler at game.js:1939 still calls closeCallEarthDialog()",
+            "Verify close button click handler still works",
+            "Confirm animation cancels cleanly on close without errors"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t7",
+          "description": "Failure dialog remains unchanged",
+          "steps": [
+            "Verify that when callEarth() fails (static message), the canvas remains hidden",
+            "Confirm the failure message text still displays correctly",
+            "Confirm no visual changes to the failure dialog"
+          ],
+          "passes": true
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "Animation code follows existing game.js conventions (var declarations, getElementById, no unused variables)",
+          "steps": [
+            "Check that new code uses var not let/const for local variables",
+            "Check that DOM access uses getElementById",
+            "Verify no unused variables or dead code paths"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q2",
+          "description": "Animation frame is properly cancelled on dialog close to prevent memory leaks",
+          "steps": [
+            "Verify cancelAnimationFrame is called in closeCallEarthDialog",
+            "Check that the animation frame ID variable is properly scoped and accessible",
+            "Confirm no orphaned requestAnimationFrame loops can occur"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q3",
+          "description": "Canvas animation rendering is clean with no visual artifacts",
+          "steps": [
+            "Check that canvas is cleared before each frame",
+            "Verify all drawing operations use appropriate save/restore for context state",
+            "Check that colors and dimensions are consistent with the game's visual style"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q4",
+          "description": "CSS additions are minimal and scoped, no side effects on other dialogs",
+          "steps": [
+            "Verify new CSS rules are scoped to .call-earth-canvas or #call-earth-animation",
+            "Check that modal-content layout isn't broken by the canvas addition",
+            "Verify other dialogs (intro, throne, hotkey) are unaffected"
+          ],
+          "passes": true
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": null,
+    "runCommand": "python3 -m http.server 3000",
+    "readySignal": "Serving HTTP",
+    "appType": "web",
+    "port": 3000,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Contact Earth success dialog shows animation above message text",
+        "steps": [
+          "Open the game in browser at localhost:3000",
+          "Use browser console to force success: find callEarth function and trigger with Math.random overridden to return 0.01",
+          "Verify a canvas animation plays showing UN Security Council scene",
+          "Verify the existing message text appears as subtitle below the animation",
+          "Verify animation runs for approximately 2-4 seconds"
+        ],
+        "passes": true
+      },
+      {
+        "id": "v2",
+        "description": "Dialog can be closed during animation via X key or close button",
+        "steps": [
+          "Trigger the success dialog with animation",
+          "Press X key while animation is still playing",
+          "Verify dialog closes immediately without errors",
+          "Trigger again and use close button instead",
+          "Verify same behavior"
+        ],
+        "passes": true
+      },
+      {
+        "id": "v3",
+        "description": "Failure dialog shows no animation",
+        "steps": [
+          "Override Math.random to return 0.99 to force failure",
+          "Trigger callEarth()",
+          "Verify dialog shows only the static message with no canvas animation visible"
+        ],
+        "passes": true
+      }
+    ]
+  }
+}
