@@ -88,3 +88,9 @@
 - **Summary**: Reviewed X key dismiss feature (dismissIntroDialog, dismissThroneDialog, X key handler, HTML dialog markup, hotkey table entry) — code is already clear, minimal, and follows existing conventions
 - **Tests run**: yes — node --check game.js passed (syntax valid)
 - **Outcome**: nothing to simplify
+
+## reviewer — 2026-03-26T21:00:00Z
+- **Summary**: issues found — duplicate canCallEarth/callEarth definitions (second shadows first, call-earth dialog never opens), canvas click handler missing dialog guards, duplicate state.contactedEarth in init(), ESC handler opens hotkey modal during intro dialog
+- **quality_checklist**: 3 items verified (q1, q2, q3 — q1 fails due to canvas click handler regression, others pass)
+- **Reviews**: code quality (3 Critical, 2 Important), error handling (clean), test coverage (adequate — no test infra project-wide)
+- **Outcome**: exit_signal: false (3 blockers)
