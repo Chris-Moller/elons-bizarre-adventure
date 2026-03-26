@@ -1745,6 +1745,29 @@
                 addLog("A Subpar Battery at (" + s.col + ", " + s.row + ") exploded!", "explosion");
                 state.structures.splice(i, 1);
                 anyExploded = true;
+
+                // Check if Elon is adjacent to the exploding battery
+                for (var u = 0; u < state.units.length; u++) {
+                    var unit = state.units[u];
+                    if (unit.type !== "elon") continue;
+                    var adjacent = false;
+                    for (var dr = -1; dr <= 1; dr++) {
+                        for (var dc = -1; dc <= 1; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            if (unit.row === s.row + dr && unit.col === s.col + dc) {
+                                adjacent = true;
+                            }
+                        }
+                    }
+                    if (adjacent && Math.random() < 0.10) {
+                        unit.name = "Elon Bones";
+                        unit.movesLeft = 0;
+                        unit.movesMax = 0;
+                        state.gameOver = true;
+                        addLog("A Subpar Battery explosion killed Elon Musk! Only bones remain... GAME OVER!", "explosion");
+                    }
+                }
+                if (state.gameOver) break;
             }
         }
         // Clamp hovel energy to new capacity after explosions
