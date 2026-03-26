@@ -1720,6 +1720,51 @@
                     stormStructure.dusty = true;
                     addLog("A Solar Panel at (" + tile.col + ", " + tile.row + ") was covered in dust!", "dust");
                 }
+
+                // Check if storm tile hits a rock hovel — 5% collapse chance
+                if (stormStructure && stormStructure.type === "rock_hovel" && Math.random() < 0.05) {
+                    // Remove hovel from structures
+                    var hovelIdx = state.structures.indexOf(stormStructure);
+                    if (hovelIdx !== -1) {
+                        state.structures.splice(hovelIdx, 1);
+                    }
+                    // Place rock resource on tile
+                    state.map[tile.row][tile.col].resource = "rocks";
+                    addLog("A Rock Hovel at (" + tile.col + ", " + tile.row + ") was destroyed by the Dust Storm!", "storm");
+
+                    // Check units on the collapsed hovel tile — 20% destruction chance
+                    var hovelUnitsToRemove = [];
+                    for (var hu = 0; hu < state.units.length; hu++) {
+                        var hUnit = state.units[hu];
+                        if (hUnit.row === tile.row && hUnit.col === tile.col) {
+                            if (Math.random() < 0.20) {
+                                if (hUnit.type === "elon") {
+                                    hUnit.name = "Elon Bones";
+                                    hUnit.movesLeft = 0;
+                                    hUnit.movesMax = 0;
+                                    state.gameOver = true;
+                                    addLog("Elon Musk was crushed by the collapsing Rock Hovel! Only bones remain... GAME OVER!", "storm");
+                                } else {
+                                    var hDef = UNIT_TYPES[hUnit.type];
+                                    if (hDef.degradeResource) {
+                                        var hMapTile = state.map[hUnit.row][hUnit.col];
+                                        hMapTile.resource = hDef.degradeResource.type;
+                                    }
+                                    hovelUnitsToRemove.push(hu);
+                                    addLog("A " + hUnit.name + " was crushed by the collapsing Rock Hovel at (" + hUnit.col + ", " + hUnit.row + ")!", "storm");
+                                }
+                            }
+                        }
+                    }
+                    // Remove destroyed units (reverse order)
+                    for (var hu = hovelUnitsToRemove.length - 1; hu >= 0; hu--) {
+                        state.units.splice(hovelUnitsToRemove[hu], 1);
+                    }
+                    // Clamp selectedUnit after removals
+                    if (state.selectedUnit >= state.units.length) {
+                        state.selectedUnit = 0;
+                    }
+                }
             }
         }
     }

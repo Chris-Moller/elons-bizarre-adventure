@@ -1,0 +1,122 @@
+{
+  "quality": "full",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Add Rock Hovel collapse to dust storm collisions",
+      "description": "Extend checkDustStormCollisions() in game.js to roll a 5% collapse chance when a dust storm occupies a tile with a Rock Hovel. On collapse, remove the hovel from state.structures, place a rock resource on the tile, and check units on that tile for a 20% destruction chance (Elon becomes Elon Bones / game over; Rocktimus is destroyed with degradeResource placed).",
+      "acceptance_criteria": "1. 5% collapse chance when dust storm hits rock_hovel tile.\n2. Collapsed hovel removed from state.structures, tile gets resource = 'rocks'.\n3. Elon on same tile: 20% chance → Elon Bones + game over.\n4. Rocktimus on same tile: 20% chance → destroyed + degradeResource placed.\n5. Log messages use 'storm' log type.\n6. Energy in collapsed hovel is simply lost (no special handling needed — removing the structure is sufficient).\n7. Adjacent structures (batteries, solar panels) continue to function — no changes needed since they dynamically check adjacency.",
+      "claudeMd": "# Project Context\n\nYou are modifying `game.js`, a single-file vanilla JS browser game (~2500 lines). No build system, no framework, no TypeScript.\n\n## What to change\n\nModify `checkDustStormCollisions()` (starts at line ~1735). After the existing solar panel dust check (line ~1782), add rock hovel collapse logic.\n\n## Exact location\n\nThe function already fetches `stormStructure` via `getStructureAt(tile.row, tile.col)` at line ~1778. You can reuse this reference OR fetch it separately for the hovel check.\n\n**IMPORTANT**: Add the hovel collapse block AFTER the solar panel check but BEFORE the closing `}` of the tile loop (line ~1783). The hovel collapse must happen after the unit check so that `isUnitInHovel()` correctly protects units from normal storm damage first.\n\n## Implementation pattern\n\nFollow the existing patterns exactly:\n\n### Structure removal pattern (from processSubparBatteryExplosions, line ~1787):\n```js\nstate.structures.splice(i, 1);\n```\nTo find the index of the structure in `state.structures`, loop or use `indexOf`.\n\n### Elon death pattern (from line ~1748):\n```js\nunit.name = \"Elon Bones\";\nunit.movesLeft = 0;\nunit.movesMax = 0;\nstate.gameOver = true;\naddLog(\"message\", \"storm\");\n```\n\n### Robot death pattern (from line ~1756):\n```js\nvar def = UNIT_TYPES[unit.type];\nif (def.degradeResource) {\n    var mapTile = state.map[unit.row][unit.col];\n    mapTile.resource = def.degradeResource.type;\n}\n// splice unit from state.units\naddLog(\"message\", \"storm\");\n```\n\n### Logging:\nUse `addLog(message, \"storm\")` — this is the existing storm log type.\n\n## Key details\n\n- `getStructureAt(row, col)` returns the structure object or null.\n- Structure objects have: `type`, `row`, `col`, `energy` (for hovels).\n- `UNIT_TYPES[unit.type].degradeResource` — for rocktimus this is `{ type: \"rocks\", amount: 1 }`.\n- When removing structures by index, find the index in `state.structures` array.\n- After removing units, clamp `state.selectedUnit` if it's out of bounds (pattern exists at line ~1773).\n- Use `var` not `let`/`const` for variable declarations to match the codebase style (the codebase uses `var` throughout except for top-level `const`).\n\n## Code style\n- `var` for local variables\n- 8-space indentation inside the function (match surrounding code)\n- No semicolons after function declarations, semicolons after statements\n- Use string concatenation with `+`, not template literals\n\n## What NOT to change\n- Do not modify `isUnitInHovel()` — units in hovels should still be protected from normal storm damage\n- Do not modify adjacency logic for batteries/solar panels\n- Do not add any new functions — add the logic inline in `checkDustStormCollisions()`",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Add 5% collapse roll for rock_hovel structures hit by dust storms",
+          "steps": [
+            "In checkDustStormCollisions(), after the solar panel dust check (~line 1782), add a check: if stormStructure exists and is type 'rock_hovel', roll Math.random() < 0.05",
+            "On collapse: find the structure index in state.structures and splice it out",
+            "Set state.map[tile.row][tile.col].resource = 'rocks'",
+            "Add log: addLog('A Rock Hovel at (' + tile.col + ', ' + tile.row + ') was destroyed by the Dust Storm!', 'storm')",
+            "Verify the structure is removed by reading the code"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t2",
+          "description": "Add 20% Elon destruction chance when hovel collapses with Elon on tile",
+          "steps": [
+            "After hovel removal, loop through state.units to find units at tile.row, tile.col",
+            "If unit.type === 'elon' and Math.random() < 0.20: set name to 'Elon Bones', movesLeft/Max to 0, gameOver to true",
+            "Log with storm type: 'Elon Musk was crushed by the collapsing Rock Hovel! Only bones remain... GAME OVER!'",
+            "Verify the pattern matches existing Elon death code"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t3",
+          "description": "Add 20% Rocktimus destruction chance when hovel collapses with robot on tile",
+          "steps": [
+            "In same unit loop, if unit.type !== 'elon' (i.e. rocktimus), roll Math.random() < 0.20",
+            "Place degradeResource on map tile, add unit index to removal list",
+            "Log: 'A Rocktimus Robot was crushed by the collapsing Rock Hovel at (col, row)!'",
+            "After loop, splice destroyed units in reverse order and clamp state.selectedUnit",
+            "Verify the pattern matches existing robot death code in the function"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t4",
+          "description": "Verify no regressions in existing dust storm behavior",
+          "steps": [
+            "Read the full checkDustStormCollisions function to verify existing unit check and solar panel check are unchanged",
+            "Verify isUnitInHovel still protects units from normal storm damage",
+            "Ensure the new code block doesn't interfere with the existing stormStructure solar panel check"
+          ],
+          "passes": true
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "Code follows existing patterns and style exactly",
+          "steps": [
+            "Check that var is used (not let/const) for local variables",
+            "Check indentation matches surrounding code (8 spaces inside function body)",
+            "Check string concatenation style matches (+ operator, not template literals)",
+            "Check log messages use 'storm' type consistently"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q2",
+          "description": "No unnecessary code or over-engineering",
+          "steps": [
+            "Verify no new helper functions were created (logic should be inline)",
+            "Verify no changes outside checkDustStormCollisions()",
+            "Verify no commented-out code or TODOs were added"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q3",
+          "description": "Edge cases handled correctly",
+          "steps": [
+            "Verify unit removal uses reverse-order splice to avoid index shifting",
+            "Verify state.selectedUnit is clamped after unit removal",
+            "Verify gameOver check prevents further processing if Elon dies"
+          ],
+          "passes": true
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": null,
+    "runCommand": "python3 -m http.server 3000",
+    "readySignal": "Serving HTTP",
+    "appType": "web",
+    "port": 3000,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Game loads without errors",
+        "steps": [
+          "Open browser to http://localhost:3000",
+          "Verify the game canvas renders and no console errors appear",
+          "Start a new game and verify basic gameplay works"
+        ],
+        "passes": true
+      },
+      {
+        "id": "v2",
+        "description": "Dust storm collision code is syntactically correct",
+        "steps": [
+          "Open browser to http://localhost:3000",
+          "Check browser console for any JavaScript syntax errors",
+          "Verify the game can progress through turns without errors"
+        ],
+        "passes": true
+      }
+    ]
+  }
+}
