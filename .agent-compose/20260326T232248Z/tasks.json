@@ -16,7 +16,7 @@
             "Verify the robot is NOT pushed to state.units when rogue triggers",
             "Verify the existing state.units.push(robot) remains for the non-rogue path"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t2",
@@ -26,7 +26,7 @@
             "Add a thematic log message using addLog()",
             "Call refreshView() before returning"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t3",
@@ -35,7 +35,7 @@
             "Verify state.units.push(robot) still executes when rogue check fails",
             "Verify the existing addLog and refreshView calls remain untouched"
           ],
-          "passes": false
+          "passes": true
         }
       ],
       "quality_checklist": [
@@ -43,7 +43,7 @@
           "id": "q1",
           "description": "Rogue check uses var and matches codebase style",
           "steps": ["Verify var is used instead of let/const", "Verify Math.random() pattern matches other uses in the file"],
-          "passes": false
+          "passes": true
         }
       ]
     }
@@ -58,7 +58,7 @@
         "id": "v1",
         "description": "buildRocktimus contains rogue check with Math.random() < 0.01",
         "steps": ["Grep game.js for 'Math.random() < 0.01' inside buildRocktimus", "Verify 'Elon Bones' is set in the rogue branch", "Verify state.gameOver = true in the rogue branch"],
-        "passes": false
+        "passes": true
       }
     ]
   }
