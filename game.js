@@ -1169,6 +1169,18 @@
 
         var openTile = findAdjacentOpenTile(unit.row, unit.col);
         var robot = createUnit("rocktimus", openTile.row, openTile.col);
+
+        if (Math.random() < 0.01) {
+            var elon = state.units[0];
+            elon.name = "Elon Bones";
+            elon.movesLeft = 0;
+            elon.movesMax = 0;
+            state.gameOver = true;
+            addLog("The Rocktimus unit has gone rogue! It turned on Elon Musk... only bones remain. GAME OVER!", "construct");
+            refreshView();
+            return;
+        }
+
         state.units.push(robot);
 
         addLog(unit.name + " constructed a Rocktimus Robot at (" + openTile.col + ", " + openTile.row + ")", "construct");
