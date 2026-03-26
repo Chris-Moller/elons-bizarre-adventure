@@ -1282,16 +1282,15 @@
             msgEl.textContent = "We hope you are enjoying your exile on Mars, Elon. No, we have not changed our minds.";
             addLog(unit.name + " contacted Earth from Comm Dish at (" + dish.col + ", " + dish.row + ")! They responded!", "comm");
             animCanvasEl.classList.remove("hidden");
-            state.callEarthDialogOpen = true;
-            dialogEl.classList.remove("hidden");
             playContactEarthAnimation(animCanvasEl, null);
         } else {
             msgEl.textContent = "*nothing but static*";
             addLog(unit.name + " tried to call Earth from Comm Dish at (" + dish.col + ", " + dish.row + ")... nothing but static.", "comm");
             animCanvasEl.classList.add("hidden");
-            state.callEarthDialogOpen = true;
-            dialogEl.classList.remove("hidden");
         }
+
+        state.callEarthDialogOpen = true;
+        dialogEl.classList.remove("hidden");
 
         refreshView();
     }
@@ -2412,7 +2411,6 @@
             ceCtx.stroke();
 
             // Laurel arcs (left)
-            ceCtx.strokeStyle = "#4b92db";
             ceCtx.lineWidth = 1.5;
             for (var i = 0; i < 5; i++) {
                 var angle = -Math.PI * 0.7 + i * 0.22;
@@ -2444,8 +2442,7 @@
                 var radius = emblemRadius + 10 + ringProgress * 80;
                 var alpha = Math.max(0, 1 - ringProgress) * 0.6;
                 ceCtx.strokeStyle = "rgba(75, 146, 219, " + alpha + ")";
-                ceCtx.lineWidth = 2 - ringProgress * 1.5;
-                if (ceCtx.lineWidth < 0.3) ceCtx.lineWidth = 0.3;
+                ceCtx.lineWidth = Math.max(2 - ringProgress * 1.5, 0.3);
                 ceCtx.beginPath();
                 ceCtx.arc(centerX, emblemY, radius, 0, Math.PI * 2);
                 ceCtx.stroke();
