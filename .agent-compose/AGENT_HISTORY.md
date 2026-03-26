@@ -94,3 +94,8 @@
 - **quality_checklist**: 3 items verified (q1, q2, q3 — q1 fails due to canvas click handler regression, others pass)
 - **Reviews**: code quality (3 Critical, 2 Important), error handling (clean), test coverage (adequate — no test infra project-wide)
 - **Outcome**: exit_signal: false (3 blockers)
+
+## reviewer — 2026-03-26T21:15:00Z
+- **Summary**: issues fixed — removed duplicate canCallEarth/callEarth (kept original that opens dialog), restored canvas click handler dialog guards, added introDialogOpen guard to ESC handler, removed duplicate state.contactedEarth in init(), updated call-earth dialog hint to mention X shortcut
+- **quality_checklist**: 3 items verified (q1, q2, q3 — all pass)
+- **Outcome**: success / exit_signal: true

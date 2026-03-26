@@ -1215,23 +1215,6 @@
         refreshView();
     }
 
-    // --------------- Call Earth Action ---------------
-    function canCallEarth() {
-        if (state.gameOver) return false;
-        if (state.contactedEarth) return false;
-        var unit = getSelectedUnit();
-        var structure = getStructureAt(unit.row, unit.col);
-        if (!structure || structure.type !== "comm_dish") return false;
-        return true;
-    }
-
-    function callEarth() {
-        if (!canCallEarth()) return;
-        state.contactedEarth = true;
-        addLog("Elon contacted Earth! A new blueprint has been received...", "build");
-        refreshView();
-    }
-
     // --------------- Mars Throne Construction ---------------
     function canBuildMarsThrone() {
         if (state.gameOver) return false;
@@ -1568,6 +1551,10 @@
     }
 
     canvas.addEventListener("click", function (e) {
+        if (state.introDialogOpen) return;
+        if (state.callEarthDialogOpen) return;
+        if (state.throneDialogOpen) return;
+        if (state.hotkeyModalOpen) return;
         const tile = getTileFromClick(e);
         if (!tile) return;
 
@@ -1646,9 +1633,10 @@
             return;
         }
 
-        // Handle hotkey modal toggle
+        // Handle hotkey modal toggle (blocked while intro dialog is open)
         if (e.key === "Escape") {
             e.preventDefault();
+            if (state.introDialogOpen) return;
             toggleHotkeyModal();
             return;
         }
@@ -1742,7 +1730,6 @@
         state.contactedEarth = false;
         state.marsThronePlaced = false;
         state.logs = [];
-        state.contactedEarth = false;
         state.commDishesUsedThisTurn = [];
         state.callEarthDialogOpen = false;
         state.selectedTile = state.map[elonUnit.row][elonUnit.col];
