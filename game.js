@@ -1251,6 +1251,16 @@
         document.getElementById("call-earth-dialog").classList.add("hidden");
     }
 
+    function dismissIntroDialog() {
+        state.introDialogOpen = false;
+        document.getElementById("intro-dialog").classList.add("hidden");
+    }
+
+    function dismissThroneDialog() {
+        state.throneDialogOpen = false;
+        document.getElementById("throne-dialog").classList.add("hidden");
+    }
+
     // --------------- Comm Dish Construction ---------------
     function canBuildCommDish() {
         var unit = getSelectedUnit();
@@ -1371,6 +1381,10 @@
 
         state.marsThronePlaced = true;
         addLog(unit.name + " built the Mars Throne at (" + openTile.col + ", " + openTile.row + ")", "build");
+        addLog("Elon has claimed Mars. Long live the King of Mars.", "victory");
+        state.gameOver = true;
+        state.throneDialogOpen = true;
+        document.getElementById("throne-dialog").classList.remove("hidden");
         refreshView();
     }
 
@@ -1763,6 +1777,9 @@
     canvas.addEventListener("click", function (e) {
         if (state.introAnimationPlaying) return;
         if (state.introDialogOpen) return;
+        if (state.callEarthDialogOpen) return;
+        if (state.throneDialogOpen) return;
+        if (state.hotkeyModalOpen) return;
         const tile = getTileFromClick(e);
         if (!tile) return;
 
@@ -1839,6 +1856,15 @@
 
     // Keyboard controls
     document.addEventListener("keydown", function (e) {
+        // Universal X key handler — dismiss whichever dialog is open
+        if (e.key === "x" || e.key === "X") {
+            if (state.introDialogOpen) { dismissIntroDialog(); e.preventDefault(); return; }
+            if (state.callEarthDialogOpen) { closeCallEarthDialog(); e.preventDefault(); return; }
+            if (state.throneDialogOpen) { dismissThroneDialog(); e.preventDefault(); return; }
+            if (state.hotkeyModalOpen) { toggleHotkeyModal(); e.preventDefault(); return; }
+            return;
+        }
+
         // Handle hotkey modal toggle (blocked while intro dialog is open)
         if (e.key === "Escape") {
             e.preventDefault();
@@ -2230,7 +2256,6 @@
         state.contactedEarth = false;
         state.marsThronePlaced = false;
         state.logs = [];
-        state.contactedEarth = false;
         state.commDishesUsedThisTurn = [];
         state.callEarthDialogOpen = false;
         state.throneDialogOpen = false;

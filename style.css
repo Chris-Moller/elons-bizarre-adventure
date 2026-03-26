@@ -251,6 +251,51 @@ header .subtitle {
     cursor: pointer;
 }
 
+/* --------------- Intro Dialog --------------- */
+#intro-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#intro-dialog.hidden {
+    display: none;
+}
+
+.intro-flavor {
+    font-size: 0.95rem;
+    color: #cc9966;
+    text-align: center;
+    padding: 12px 0;
+    line-height: 1.5;
+}
+
+/* --------------- Throne Dialog --------------- */
+#throne-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#throne-dialog.hidden {
+    display: none;
+}
+
+.throne-msg {
+    font-size: 1rem;
+    color: #FFD700;
+    text-align: center;
+    padding: 12px 0;
+    line-height: 1.5;
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.3);
+}
+
 /* --------------- Hotkey Modal --------------- */
 #hotkey-modal {
     position: fixed;

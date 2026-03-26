@@ -1,0 +1,167 @@
+{
+  "quality": "full",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Add X key to close any dialog + create missing dialogs",
+      "description": "Create intro dialog and throne dialog that don't exist yet, then add a universal 'X' keypress handler that dismisses whichever dialog is currently open. Update the hotkey modal table to document the new shortcut.",
+      "acceptance_criteria": "1. Pressing X closes whichever dialog is open (intro, call-earth, throne, hotkey modal). 2. Intro dialog shown on game start; X triggers Begin. 3. Call earth dialog closed by X. 4. Throne dialog shown on victory; X triggers Continue. 5. Hotkey modal closed by X. 6. X does nothing when no dialog is open. 7. Hotkey table lists X as 'Close dialog'. 8. Existing close mechanisms still work.",
+      "claudeMd": "# Project Context\n\nYou are implementing a universal 'X' key dismiss for dialogs in a vanilla JS browser game. The project is a single-page app: `index.html`, `style.css`, `game.js` (single IIFE, ~1730 lines).\n\n## Existing Dialog Patterns\n\n### Call Earth Dialog (`#call-earth-dialog`)\n- State: `state.callEarthDialogOpen` (boolean)\n- Open: `dialogEl.classList.remove('hidden')` + set state true (line 1159-1160)\n- Close: `closeCallEarthDialog()` \u2014 sets state false, adds 'hidden' class (line 1164-1167)\n- HTML: `index.html` lines 63-73, uses `.modal-backdrop` + `.modal-content` + `.modal-close` classes\n\n### Hotkey Modal (`#hotkey-modal`)\n- State: `state.hotkeyModalOpen` (boolean)\n- Toggle: `toggleHotkeyModal()` \u2014 flips state, toggles 'hidden' class (line 1538-1541)\n- HTML: `index.html` lines 74-103\n\n## Dialogs You Must Create\n\n### Intro Dialog\n- Show on game load (before gameplay starts). Must have a 'Begin' button.\n- Add `state.introDialogOpen: true` to initial state (line 67-87).\n- Init it as visible (no 'hidden' class). Clicking Begin or pressing X calls a `dismissIntroDialog()` function that hides it and sets `state.introDialogOpen = false`.\n- Block all game input while intro is showing \u2014 add `if (state.introDialogOpen) return;` in the keydown handler alongside the existing modal/dialog checks (after the X key handler).\n- Place HTML before `#call-earth-dialog` in `index.html`.\n- Content: Game title 'Elon's Bizarre Adventure', brief flavor text about crash-landing on Mars, and a 'Begin' button.\n\n### Throne Dialog (Victory)\n- Show when Mars Throne is built (in `buildMarsThrone()`, line 1235).\n- Add `state.throneDialogOpen: false` to state.\n- After building the throne, set `state.throneDialogOpen = true` and show the dialog.\n- 'Continue' button or pressing X calls a function that hides the dialog and sets `state.throneDialogOpen = false`. The game is already over (`state.gameOver = true`) so no further action needed.\n- Place HTML after `#call-earth-dialog` in `index.html`.\n- Content: Victory message about claiming Mars.\n\n## Universal X Key Handler\n\nIn the `keydown` listener (line 1623), add X key handling BEFORE the ESC handler:\n\n```js\nif (e.key === 'x' || e.key === 'X') {\n    if (state.introDialogOpen) { dismissIntroDialog(); e.preventDefault(); return; }\n    if (state.callEarthDialogOpen) { closeCallEarthDialog(); e.preventDefault(); return; }\n    if (state.throneDialogOpen) { dismissThroneDialog(); e.preventDefault(); return; }\n    if (state.hotkeyModalOpen) { toggleHotkeyModal(); e.preventDefault(); return; }\n    // No dialog open \u2014 do nothing, fall through to default return\n    return;\n}\n```\n\nIMPORTANT: The X handler must come before the line `if (state.hotkeyModalOpen) return;` (line 1632) so it can close the hotkey modal. It must also come before `if (state.callEarthDialogOpen) return;` (line 1633) so it can close that dialog.\n\n## Hotkey Table Update\n\nIn `index.html`, add a row to the hotkey table (before the ESC row):\n```html\n<tr><td><kbd>X</kbd></td><td>Close dialog</td></tr>\n```\n\n## CSS\n\nUse the same `.modal-backdrop`, `.modal-content`, `.modal-header`, `.modal-close` patterns. Add IDs `#intro-dialog` and `#throne-dialog` with the same positioning as `#call-earth-dialog` and `#hotkey-modal`. Copy the existing hidden/visible toggle pattern.\n\n## Conventions\n- Vanilla JS, no modules, everything inside the IIFE\n- State managed on the `state` object\n- DOM toggling uses `.hidden` class\n- Use `var` for consistency with existing code (some newer code uses `const`/`let` \u2014 follow the local pattern of whichever section you're editing)\n- Add click listeners in the same section as existing ones (around line 1615)\n\n## Gotchas\n- The 'x' key is NOT currently used for any game action, so no conflict.\n- Must handle both 'x' and 'X' (case-insensitive).\n- The intro dialog must block the init canvas rendering \u2014 the game should still initialize behind it, but input should be blocked.\n- Don't break ESC handling for hotkey modal \u2014 ESC should still work.\n- The throne dialog shows AFTER `state.gameOver = true`, so game input is already blocked. The X handler just needs to dismiss the dialog overlay.",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Create intro dialog HTML/CSS that shows on game load with a Begin button",
+          "steps": [
+            "Add #intro-dialog markup to index.html before #call-earth-dialog, using .modal-backdrop + .modal-content pattern",
+            "Add CSS for #intro-dialog and #intro-dialog.hidden in style.css",
+            "Add state.introDialogOpen = true to state object in game.js",
+            "Verify dialog is visible on page load (no .hidden class initially)"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t2",
+          "description": "Implement dismissIntroDialog() that hides intro and allows gameplay",
+          "steps": [
+            "Create dismissIntroDialog() function in game.js that sets state.introDialogOpen = false and adds .hidden class",
+            "Wire Begin button click to dismissIntroDialog()",
+            "Add state.introDialogOpen check to keydown handler to block input while intro is showing",
+            "Verify clicking Begin hides the dialog and enables gameplay"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t3",
+          "description": "Create throne dialog HTML/CSS shown on Mars Throne victory",
+          "steps": [
+            "Add #throne-dialog markup to index.html after #call-earth-dialog with Continue button",
+            "Add CSS for #throne-dialog and #throne-dialog.hidden in style.css",
+            "Add state.throneDialogOpen = false to state object",
+            "Modify buildMarsThrone() to set state.throneDialogOpen = true and show the dialog",
+            "Create dismissThroneDialog() that hides the dialog and sets state to false",
+            "Wire Continue button click to dismissThroneDialog()"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t4",
+          "description": "Add universal X key handler in keydown listener",
+          "steps": [
+            "Add X key check at the top of the keydown handler (before ESC and before modal/dialog blocking checks)",
+            "Handle case-insensitive X (both 'x' and 'X')",
+            "For intro dialog: call dismissIntroDialog()",
+            "For call-earth dialog: call closeCallEarthDialog()",
+            "For throne dialog: call dismissThroneDialog()",
+            "For hotkey modal: call toggleHotkeyModal()",
+            "If no dialog open, do nothing (return without interfering with gameplay)"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t5",
+          "description": "Update hotkey modal table to list X as Close dialog",
+          "steps": [
+            "Add <tr><td><kbd>X</kbd></td><td>Close dialog</td></tr> to hotkey table in index.html before the ESC row",
+            "Verify the new row appears in the hotkey modal"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t6",
+          "description": "Existing close mechanisms still work (ESC for hotkey modal, x button, action buttons)",
+          "steps": [
+            "Verify ESC still toggles the hotkey modal",
+            "Verify the x (times) close buttons on call-earth and hotkey dialogs still work",
+            "Verify Begin button on intro dialog still works",
+            "Verify Continue button on throne dialog still works"
+          ],
+          "passes": true
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "X key handler follows priority order and doesn't interfere with gameplay when no dialog is open",
+          "steps": [
+            "Check that the X handler is placed before the modal/dialog blocking checks in the keydown listener",
+            "Check that 'x' is not accidentally mapped to any game action",
+            "Check that pressing X with no dialog open doesn't trigger any side effects"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q2",
+          "description": "New dialogs follow existing codebase patterns consistently",
+          "steps": [
+            "Check that intro-dialog and throne-dialog use the same CSS classes as existing modals",
+            "Check that state flags follow the same naming pattern (camelCase, boolean)",
+            "Check that open/close functions follow the same pattern as closeCallEarthDialog() and toggleHotkeyModal()"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q3",
+          "description": "No dead code, unused variables, or redundant checks introduced",
+          "steps": [
+            "Check for any unused functions or variables",
+            "Check for duplicate state checks in the keydown handler",
+            "Verify no CSS rules are duplicated unnecessarily"
+          ],
+          "passes": true
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": null,
+    "runCommand": "python3 -m http.server 3000",
+    "readySignal": "Serving HTTP",
+    "appType": "web",
+    "port": 3000,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Intro dialog shows on load and X key dismisses it",
+        "steps": [
+          "Open http://localhost:3000",
+          "Verify intro dialog is visible with game title and Begin button",
+          "Press X key",
+          "Verify intro dialog is dismissed and game is playable"
+        ],
+        "passes": true
+      },
+      {
+        "id": "v2",
+        "description": "Hotkey modal can be opened with ESC and closed with X",
+        "steps": [
+          "Dismiss intro dialog first",
+          "Press ESC to open hotkey modal",
+          "Verify X key row is listed in the hotkey table",
+          "Press X to close the hotkey modal",
+          "Verify modal is closed"
+        ],
+        "passes": true
+      },
+      {
+        "id": "v3",
+        "description": "X key does nothing when no dialog is open",
+        "steps": [
+          "With no dialog open, press X key",
+          "Verify no dialog appears and gameplay is unaffected"
+        ],
+        "passes": true
+      },
+      {
+        "id": "v4",
+        "description": "Existing ESC and button close mechanisms still work",
+        "steps": [
+          "Press ESC to open hotkey modal, press ESC again to close \u2014 verify it works",
+          "Open hotkey modal, click the x button \u2014 verify it closes",
+          "Reload page, click Begin button \u2014 verify intro dialog closes"
+        ],
+        "passes": true
+      }
+    ]
+  }
+}
