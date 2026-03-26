@@ -2348,7 +2348,7 @@
             ceCtx.fillRect(0, 0, w, h);
         }
 
-        function drawEmblem(progress) {
+        function drawEmblem() {
             ceCtx.save();
             ceCtx.translate(centerX, emblemY);
 
@@ -2459,7 +2459,7 @@
             var progress = elapsed / totalDuration;
 
             drawBackground();
-            drawEmblem(progress);
+            drawEmblem();
             drawSignalRings(progress);
             drawCouncilSilhouettes();
             drawText(progress);

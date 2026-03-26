@@ -1,3 +1,9 @@
+## reviewer — 2026-03-26T22:00:00Z
+- **Summary**: issues fixed — removed unused `progress` parameter from `drawEmblem()` function
+- **quality_checklist**: 4 items verified (q1, q2, q3, q4 — all pass)
+- **Reviews**: code quality (1 minor issue fixed: dead parameter in drawEmblem), error handling (clean — synchronous codebase, null-check omission matches project convention), test coverage (adequate — no test infra project-wide)
+- **Outcome**: success / exit_signal: true
+
 ## simplifier — 2026-03-26T21:45:00Z
 - **Summary**: Deduplicated dialog-open logic in callEarth() (moved shared state.callEarthDialogOpen and classList.remove out of if/else branches); removed redundant strokeStyle reassignment in drawEmblem; replaced manual lineWidth clamp with Math.max in drawSignalRings.
 - **Tests run**: yes — node --check game.js passed
