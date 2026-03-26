@@ -60,6 +60,17 @@
                 <canvas id="game-canvas"></canvas>
             </div>
         </div>
+        <div id="intro-dialog">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Elon's Bizarre Adventure</h2>
+                </div>
+                <p class="intro-flavor">You've crash-landed on Mars with nothing but your wits and a spacesuit. Gather rocks, harness energy, and build your way to galactic dominance.</p>
+                <button id="begin-btn" class="action-btn">Begin</button>
+                <p class="modal-hint">Press <kbd>X</kbd> to begin</p>
+            </div>
+        </div>
         <div id="call-earth-dialog" class="hidden">
             <div class="modal-backdrop"></div>
             <div class="modal-content">
@@ -69,6 +80,17 @@
                 </div>
                 <p id="call-earth-message" class="call-earth-msg"></p>
                 <p class="modal-hint">Click &times; to close</p>
+            </div>
+        </div>
+        <div id="throne-dialog" class="hidden">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Victory!</h2>
+                </div>
+                <p class="throne-msg">Elon has claimed Mars. The Mars Throne stands as a monument to your conquest. Long live the King of Mars!</p>
+                <button id="continue-btn" class="action-btn">Continue</button>
+                <p class="modal-hint">Press <kbd>X</kbd> to continue</p>
             </div>
         </div>
         <div id="hotkey-modal" class="hidden">
@@ -95,6 +117,7 @@
                         <tr><td><kbd>M</kbd></td><td>Build Mars Throne</td></tr>
                         <tr><td><kbd>Tab</kbd></td><td>Cycle units</td></tr>
                         <tr><td><kbd>E</kbd> / <kbd>Enter</kbd></td><td>End turn</td></tr>
+                        <tr><td><kbd>X</kbd></td><td>Close dialog</td></tr>
                         <tr><td><kbd>ESC</kbd></td><td>Toggle this overlay</td></tr>
                     </tbody>
                 </table>
