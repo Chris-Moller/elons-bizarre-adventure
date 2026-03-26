@@ -1,0 +1,88 @@
+{
+  "quality": "skip",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Add Elon death check to battery explosion",
+      "description": "Extend processSubparBatteryExplosions() in game.js to check if Elon is adjacent to an exploding battery and roll a 10% kill chance.",
+      "acceptance_criteria": "1. When a Subpar Battery explodes, check all 8 adjacent tiles for Elon.\n2. If Elon is adjacent, roll 10% chance to destroy him.\n3. On success: set name to 'Elon Bones', movesLeft=0, movesMax=0, state.gameOver=true.\n4. Add log entry with type 'explosion' describing Elon's death.\n5. Battery still explodes and is removed regardless of Elon check.\n6. Rocktimus Robots are NOT affected.",
+      "claudeMd": "# Battery Explosion Elon Death\n\nYou are modifying `game.js`, specifically the `processSubparBatteryExplosions()` function (around line 1739).\n\n## What to do\n\nAfter the existing explosion log + splice (line 1745-1746), add code to:\n1. Find Elon: iterate `state.units` looking for `unit.type === \"elon\"`\n2. Check adjacency: use `dr = -1..1, dc = -1..1` loop (skip `dr===0 && dc===0`), compare `elon.row === s.row + dr && elon.col === s.col + dc`\n3. If adjacent, roll `Math.random() < 0.10`\n4. On success: set `elon.name = \"Elon Bones\"`, `elon.movesLeft = 0`, `elon.movesMax = 0`, `state.gameOver = true`, call `addLog(\"...\", \"explosion\")`\n5. If gameOver, break out of the battery loop\n\n## Patterns to match\n\n- Follow the dust storm Elon death pattern (around line 1700-1706):\n  ```js\n  unit.name = \"Elon Bones\";\n  unit.movesLeft = 0;\n  unit.movesMax = 0;\n  state.gameOver = true;\n  addLog(\"Elon Musk was consumed by the Dust Storm! Only bones remain... GAME OVER!\", \"storm\");\n  ```\n- Use `\"explosion\"` as the log type (consistent with existing battery explosion log)\n- Use `s.col` and `s.row` for the battery position (the structure variable in the loop is `s`)\n- Important: the structure is spliced BEFORE your check, so use the saved `s.col`/`s.row` values (they're still valid since `s` is a reference)\n\n## Conventions\n- Vanilla JS, var declarations, no ES6+ (match existing style)\n- No new functions needed — inline in the existing loop\n- Only check for Elon (type === \"elon\"), explicitly skip robots\n- Log message should mention the battery explosion killing Elon and include GAME OVER",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Add Elon adjacency check after battery explosion",
+          "steps": [
+            "In processSubparBatteryExplosions(), after line 1746 (splice), add code to find Elon unit from state.units",
+            "Add dr/dc loop (-1 to 1) to check if Elon is on adjacent tile to exploded battery position",
+            "Verify adjacency check skips (0,0) center tile"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t2",
+          "description": "Add 10% kill roll and Elon Bones death state",
+          "steps": [
+            "If Elon is adjacent, roll Math.random() < 0.10",
+            "On success: set elon.name = 'Elon Bones', elon.movesLeft = 0, elon.movesMax = 0, state.gameOver = true",
+            "Add addLog call with type 'explosion' describing Elon killed by battery explosion",
+            "Break out of battery loop if gameOver is set"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t3",
+          "description": "Battery still removed regardless of Elon check",
+          "steps": [
+            "Verify the splice happens before the Elon check (battery is always removed)",
+            "Verify that if Elon is not adjacent or roll fails, loop continues normally"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t4",
+          "description": "Robots are not affected by explosion",
+          "steps": [
+            "Verify the adjacency check only looks for unit.type === 'elon'",
+            "Confirm no code path affects Rocktimus Robots"
+          ],
+          "passes": true
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "Code matches existing codebase style (var declarations, no ES6+, consistent patterns)",
+          "steps": ["Check for let/const usage (should be var)", "Verify pattern matches dust storm death code"],
+          "passes": true
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": null,
+    "runCommand": "python3 -m http.server 3000",
+    "readySignal": "Serving HTTP",
+    "appType": "web",
+    "port": 3000,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Game loads without errors",
+        "steps": ["Open browser to localhost:3000", "Verify game canvas renders", "Check browser console for JS errors"],
+        "passes": false
+      },
+      {
+        "id": "v2",
+        "description": "Battery explosion Elon death code exists in processSubparBatteryExplosions",
+        "steps": [
+          "Read game.js and find processSubparBatteryExplosions function",
+          "Verify Elon adjacency check exists after battery splice",
+          "Verify 10% roll and Elon Bones death state are implemented",
+          "Verify log entry with type 'explosion' is added"
+        ],
+        "passes": false
+      }
+    ]
+  }
+}
