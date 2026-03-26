@@ -15,7 +15,7 @@
             "In game.js callEarth() function (~line 1231), change `Math.random() < 0.01` to `Math.random() < 0.05`",
             "Verify no other occurrences of the 0.01 probability exist"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t2",
@@ -26,7 +26,7 @@
             "For the adjacent-tile loop: compute dishKey for each found dish and skip if already in commDishesUsedThisTurn",
             "Return null if all adjacent dishes have been used this turn"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t3",
@@ -35,7 +35,7 @@
             "Read canCallEarth() and verify it works correctly with the updated getAdjacentCommDish()",
             "Confirm: no changes needed to canCallEarth() itself — it already checks dish !== null"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t4",
@@ -45,7 +45,7 @@
             "Confirm: after callEarth() marks a dish as used and calls refreshView(), canCallEarth() will find the next unused dish",
             "Verify no changes needed to refreshView()"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t5",
@@ -54,7 +54,7 @@
             "Read the turn-start logic (~line 1746) and confirm commDishesUsedThisTurn = [] is unchanged",
             "Verify the same reset in the game-reset function (~line 2259) is unchanged"
           ],
-          "passes": false
+          "passes": true
         }
       ],
       "quality_checklist": [
@@ -62,19 +62,19 @@
           "id": "q1",
           "description": "getAdjacentCommDish() changes follow existing code style (var, indexOf, no ES6)",
           "steps": ["Verify no let/const, no arrow functions, no Array.includes used in changes"],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q2",
           "description": "No unnecessary changes outside the two target functions",
           "steps": ["Check git diff to confirm only callEarth() and getAdjacentCommDish() were modified"],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q3",
           "description": "Edge case: unit adjacent to only one dish that is already used returns null correctly",
           "steps": ["Read through getAdjacentCommDish() logic to verify this case"],
-          "passes": false
+          "passes": true
         }
       ]
     }
@@ -94,7 +94,7 @@
           "Open game.js and search for 'Math.random() < 0.05' in callEarth()",
           "Confirm the old 0.01 value no longer exists"
         ],
-        "passes": false
+        "passes": true
       },
       {
         "id": "v2",
@@ -106,7 +106,7 @@
           "Click Call Earth again — after second attempt, verify button is disabled",
           "End turn and verify both dishes are available again"
         ],
-        "passes": false
+        "passes": true
       }
     ]
   }
