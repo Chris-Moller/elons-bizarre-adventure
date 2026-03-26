@@ -1,3 +1,10 @@
+## conflict-resolver — 2026-03-26T21:11:29Z
+
+- **Conflict**: .agent-compose/current (agent artifact conflict during rebase onto upstream/main)
+- **Resolution**: Accepted theirs for .agent-compose/current; remaining 7 commits rebased cleanly with no code conflicts
+- **Tests run**: none — no code conflicts, skipped per instructions
+- **Outcome**: success
+
 ## implementer/hotkey-modal — 2026-03-25T15:00:00Z
 - **Items completed**: t1, t2, t3, t4, t5, q1, q2, q3, q4
 - **Tests run**: no — no test suite exists; verified server serves updated files via curl
