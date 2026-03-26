@@ -1220,11 +1220,7 @@
     function canCallEarth() {
         if (state.gameOver) return false;
         var unit = getSelectedUnit();
-        var dish = getAdjacentCommDish(unit);
-        if (!dish) return false;
-        // Check if this dish has already been used this turn
-        var dishKey = dish.row + "," + dish.col;
-        return state.commDishesUsedThisTurn.indexOf(dishKey) === -1;
+        return !!getAdjacentCommDish(unit);
     }
 
     function callEarth() {
