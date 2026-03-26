@@ -16,7 +16,7 @@
             "Add dr/dc loop (-1 to 1) to check if Elon is on adjacent tile to exploded battery position",
             "Verify adjacency check skips (0,0) center tile"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t2",
@@ -27,7 +27,7 @@
             "Add addLog call with type 'explosion' describing Elon killed by battery explosion",
             "Break out of battery loop if gameOver is set"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t3",
@@ -36,7 +36,7 @@
             "Verify the splice happens before the Elon check (battery is always removed)",
             "Verify that if Elon is not adjacent or roll fails, loop continues normally"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t4",
@@ -45,7 +45,7 @@
             "Verify the adjacency check only looks for unit.type === 'elon'",
             "Confirm no code path affects Rocktimus Robots"
           ],
-          "passes": false
+          "passes": true
         }
       ],
       "quality_checklist": [
@@ -53,7 +53,7 @@
           "id": "q1",
           "description": "Code matches existing codebase style (var declarations, no ES6+, consistent patterns)",
           "steps": ["Check for let/const usage (should be var)", "Verify pattern matches dust storm death code"],
-          "passes": false
+          "passes": true
         }
       ]
     }
