@@ -1,0 +1,125 @@
+{
+  "quality": "full",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Add dynamic growth/shrinkage to dust storms",
+      "description": "Modify the moveDustStorms() function in game.js to add a 20% growth chance and 10% shrink chance each time a storm moves. Growth adds a tile perpendicular to movement direction; shrinkage removes a tile from one end. Log both events.",
+      "acceptance_criteria": "1. Each storm move rolls independently for growth (20%) and shrinkage (10%).\n2. Growth adds one tile perpendicular to the movement direction, adjacent to an existing storm tile.\n3. Shrinkage removes one tile from the storm's tile array (cannot go below 1 tile).\n4. Both can happen on the same turn.\n5. New tiles are picked up by checkDustStormCollisions (no extra work needed — it already iterates all tiles).\n6. Log entries added for growth and shrinkage with type 'storm'.",
+      "claudeMd": "# Project Context\n\nYou are modifying a vanilla JS browser game in a single file `game.js`. No build system, no framework, no TypeScript.\n\n## What to change\n\nModify `moveDustStorms()` (line ~1652) to add growth/shrink logic after each storm's tiles are moved but BEFORE the off-map removal check.\n\n## Key code locations\n- `moveDustStorms()` — line 1652: the function you modify\n- `checkDustStormCollisions()` — line 1687: already iterates all storm tiles after movement, so new growth tiles will automatically be checked for unit/structure interactions\n- `addLog(message, type)` — line 971: logging function, use type `'storm'`\n- `MAP_ROWS = 18`, `MAP_COLS = 24` — line 10-11\n- Storm object shape: `{ id, tiles: [{row, col}], direction: 'north'|'south'|'east'|'west' }`\n\n## Growth logic (20% chance per storm)\n- Perpendicular axis: north/south storms → vary col; east/west storms → vary row\n- Pick a random existing tile, try adding a neighbor at ±1 on the perpendicular axis\n- Skip if candidate is already a storm tile or out of map bounds\n- Try both perpendicular directions (randomly ordered) before giving up\n\n## Shrink logic (10% chance per storm)\n- Remove first or last element of `storm.tiles` (random choice)\n- Do NOT shrink if `storm.tiles.length <= 1`\n\n## Style conventions\n- Use `var` (not `let`/`const`) inside functions — match existing style in moveDustStorms\n- Use `Math.random() < 0.2` for 20% chance, `Math.random() < 0.1` for 10%\n- Use `for` loops, not array methods — match existing patterns\n- Keep code compact and match indentation (8 spaces inside functions)\n\n## Log messages\n- Growth: `addLog(\"A Dust Storm grew in size!\", \"storm\")`\n- Shrinkage: `addLog(\"A Dust Storm shrank in size.\", \"storm\")`",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Add 20% growth roll after storm tiles are moved",
+          "steps": [
+            "Inside the storm loop in moveDustStorms(), after tiles are moved (after the j-loop at line ~1664), add a Math.random() < 0.2 check",
+            "Determine perpendicular axis from storm.direction",
+            "Pick a random existing tile and try adding a neighbor at ±1 on perpendicular axis",
+            "Only add if candidate is in-bounds and not already a storm tile",
+            "Add log entry on successful growth"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t2",
+          "description": "Add 10% shrink roll after storm tiles are moved",
+          "steps": [
+            "After the growth block, add a Math.random() < 0.1 check",
+            "Guard: only shrink if storm.tiles.length > 1",
+            "Remove either first or last tile (random choice) using splice",
+            "Add log entry on successful shrinkage"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t3",
+          "description": "Growth and shrinkage are independent and can co-occur",
+          "steps": [
+            "Verify the two rolls are separate if-blocks (not else-if)",
+            "Confirm both can trigger on the same turn"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t4",
+          "description": "New growth tiles participate in collision checks",
+          "steps": [
+            "Verify growth tiles are added to storm.tiles before moveDustStorms returns",
+            "Confirm checkDustStormCollisions() runs after moveDustStorms() (line ~1780) and iterates all tiles"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t5",
+          "description": "Storm cannot shrink below 1 tile",
+          "steps": [
+            "Verify the shrink block has a guard: storm.tiles.length > 1",
+            "Test mentally: a 1-tile storm should never shrink"
+          ],
+          "passes": false
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "Code style matches existing moveDustStorms conventions",
+          "steps": [
+            "Check that var is used (not let/const) inside the function",
+            "Check indentation matches surrounding code (8 spaces)",
+            "Check for-loop style matches existing patterns"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q2",
+          "description": "No duplicate tile detection is correct",
+          "steps": [
+            "Verify the growth logic checks all existing storm tiles before adding",
+            "Confirm bounds checking uses MAP_ROWS and MAP_COLS correctly"
+          ],
+          "passes": false
+        },
+        {
+          "id": "q3",
+          "description": "No unnecessary code or over-engineering",
+          "steps": [
+            "Verify no new functions were extracted unnecessarily",
+            "Verify no new constants were added unless warranted",
+            "Verify no unrelated code was modified"
+          ],
+          "passes": false
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": null,
+    "runCommand": "python3 -m http.server 8000",
+    "readySignal": "Serving HTTP",
+    "appType": "web",
+    "port": 8000,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Game loads without JS errors",
+        "steps": [
+          "Open the game in browser at http://localhost:8000",
+          "Open browser console and verify no errors",
+          "Verify canvas renders and game is playable"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v2",
+        "description": "Dust storms grow and shrink during gameplay",
+        "steps": [
+          "Play through several turns until dust storms appear",
+          "Observe game log for 'grew in size' and 'shrank in size' messages",
+          "Verify storms visually change size on the map"
+        ],
+        "passes": false
+      }
+    ]
+  }
+}
