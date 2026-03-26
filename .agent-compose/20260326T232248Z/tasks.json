@@ -1,0 +1,65 @@
+{
+  "quality": "skip",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Add 1% rogue chance to buildRocktimus()",
+      "description": "In game.js, modify the buildRocktimus() function to add a 1% chance that the newly built Rocktimus goes rogue, killing Elon and triggering game over.",
+      "acceptance_criteria": "1. After resources are deducted and the robot is created, a Math.random() < 0.01 check is performed.\n2. If rogue: Elon (state.units[0]) name set to 'Elon Bones', state.gameOver = true, robot NOT added to state.units, thematic log message added.\n3. If not rogue: existing behavior unchanged.\n4. Uses Math.random() consistent with codebase patterns.",
+      "claudeMd": "# Project Context\n\nYou are modifying a single-file browser game (`game.js`, ~91K, vanilla JS). No build system, no framework, no tests.\n\n## What to change\n\nModify `buildRocktimus()` at line 1162 of `game.js`. After the robot is created with `createUnit()` (line 1171) but BEFORE `state.units.push(robot)` (line 1172), add a rogue check.\n\n## Exact pattern to follow\n\nThe rogue block should:\n1. Check `Math.random() < 0.01`\n2. If true:\n   - `var elon = state.units[0];`\n   - `elon.name = \"Elon Bones\";`\n   - `elon.movesLeft = 0;`\n   - `elon.movesMax = 0;`\n   - `state.gameOver = true;`\n   - `addLog(\"The Rocktimus unit has gone rogue! It turned on Elon Musk... only bones remain. GAME OVER!\", \"construct\");`\n   - `refreshView();`\n   - `return;` (skip pushing robot to state.units)\n3. If false: fall through to existing `state.units.push(robot)` and rest of function.\n\n## Conventions\n\n- Use `var` (not `let`/`const`) — the entire codebase uses `var`.\n- Elon is always `state.units[0]`.\n- Game over pattern: set name to 'Elon Bones', set movesLeft/movesMax to 0, set state.gameOver = true. See lines 1434-1439 for reference.\n- Log categories used: \"construct\", \"storm\", \"explosion\", \"victory\". Use \"construct\" for this.\n- Do NOT modify any other function.",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Add rogue check after createUnit() but before state.units.push()",
+          "steps": [
+            "In buildRocktimus(), after line 1171 (createUnit), add: if (Math.random() < 0.01) { ... rogue block ... return; }",
+            "Verify the robot is NOT pushed to state.units when rogue triggers",
+            "Verify the existing state.units.push(robot) remains for the non-rogue path"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t2",
+          "description": "Rogue block sets Elon to 'Elon Bones' and triggers game over",
+          "steps": [
+            "Inside the rogue block: var elon = state.units[0]; elon.name = 'Elon Bones'; elon.movesLeft = 0; elon.movesMax = 0; state.gameOver = true;",
+            "Add a thematic log message using addLog()",
+            "Call refreshView() before returning"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t3",
+          "description": "Non-rogue path is completely unchanged",
+          "steps": [
+            "Verify state.units.push(robot) still executes when rogue check fails",
+            "Verify the existing addLog and refreshView calls remain untouched"
+          ],
+          "passes": true
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "Rogue check uses var and matches codebase style",
+          "steps": ["Verify var is used instead of let/const", "Verify Math.random() pattern matches other uses in the file"],
+          "passes": true
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": null,
+    "runCommand": null,
+    "appType": "cli",
+    "checks": [
+      {
+        "id": "v1",
+        "description": "buildRocktimus contains rogue check with Math.random() < 0.01",
+        "steps": ["Grep game.js for 'Math.random() < 0.01' inside buildRocktimus", "Verify 'Elon Bones' is set in the rogue branch", "Verify state.gameOver = true in the rogue branch"],
+        "passes": true
+      }
+    ]
+  }
+}
