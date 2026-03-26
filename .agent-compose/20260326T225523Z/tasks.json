@@ -18,7 +18,7 @@
             "Add log: addLog('A Rock Hovel at (' + tile.col + ', ' + tile.row + ') was destroyed by the Dust Storm!', 'storm')",
             "Verify the structure is removed by reading the code"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t2",
@@ -29,7 +29,7 @@
             "Log with storm type: 'Elon Musk was crushed by the collapsing Rock Hovel! Only bones remain... GAME OVER!'",
             "Verify the pattern matches existing Elon death code"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t3",
@@ -41,7 +41,7 @@
             "After loop, splice destroyed units in reverse order and clamp state.selectedUnit",
             "Verify the pattern matches existing robot death code in the function"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t4",
@@ -51,7 +51,7 @@
             "Verify isUnitInHovel still protects units from normal storm damage",
             "Ensure the new code block doesn't interfere with the existing stormStructure solar panel check"
           ],
-          "passes": false
+          "passes": true
         }
       ],
       "quality_checklist": [
@@ -64,7 +64,7 @@
             "Check string concatenation style matches (+ operator, not template literals)",
             "Check log messages use 'storm' type consistently"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q2",
@@ -74,7 +74,7 @@
             "Verify no changes outside checkDustStormCollisions()",
             "Verify no commented-out code or TODOs were added"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "q3",
@@ -84,7 +84,7 @@
             "Verify state.selectedUnit is clamped after unit removal",
             "Verify gameOver check prevents further processing if Elon dies"
           ],
-          "passes": false
+          "passes": true
         }
       ]
     }
@@ -105,7 +105,7 @@
           "Verify the game canvas renders and no console errors appear",
           "Start a new game and verify basic gameplay works"
         ],
-        "passes": false
+        "passes": true
       },
       {
         "id": "v2",
@@ -115,7 +115,7 @@
           "Check browser console for any JavaScript syntax errors",
           "Verify the game can progress through turns without errors"
         ],
-        "passes": false
+        "passes": true
       }
     ]
   }
