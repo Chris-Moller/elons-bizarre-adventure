@@ -1,0 +1,63 @@
+{
+  "quality": "skip",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Fix Mars Throne dialog by removing premature game over from buildMarsThrone",
+      "description": "Remove the premature `state.gameOver = true`, `state.throneDialogOpen = true`, and dialog DOM show from `buildMarsThrone()` in game.js. This unblocks the proper 'Sit on the Mars Throne' action and its 3-step dialog sequence that ends with 'Elon's bones will sit on the Mars Throne forever. Game Over.'",
+      "acceptance_criteria": "1. Building the Mars Throne no longer immediately ends the game or shows an empty dialog.\n2. After building, the 'Sit on the Mars Throne' button becomes available when Elon is adjacent to the throne.\n3. Clicking 'Sit on the Mars Throne' triggers the 3-step dialog: 'You are the king of Mars!' -> 'The throne is comfortable...' -> 'Elon's bones will sit on the Mars Throne forever. Game Over'\n4. Game over only occurs at dialog step 3.",
+      "claudeMd": "# Fix Mars Throne Dialog\n\nYou are fixing a bug in `game.js` — a vanilla JS browser game (no build system, no framework).\n\n## The Bug\n\n`buildMarsThrone()` (~line 1357) prematurely sets `state.gameOver = true` and opens the throne dialog empty. This prevents the proper `sitOnThrone()` flow from ever triggering.\n\n## The Fix\n\nIn `buildMarsThrone()`, remove these 3 lines (~1382-1384):\n```js\nstate.gameOver = true;\nstate.throneDialogOpen = true;\ndocument.getElementById(\"throne-dialog\").classList.remove(\"hidden\");\n```\n\nKeep everything else in `buildMarsThrone()` (resource consumption, structure placement, `marsThronePlaced = true`, log messages, `refreshView()`).\n\n## Verification\n\nThe existing `sitOnThrone()` and `advanceThroneDialog()` functions handle the dialog correctly. After your fix, the flow is: build throne -> move Elon adjacent -> 'Sit on the Mars Throne' button appears -> click it -> 3-step dialog -> game over.\n\n## Conventions\n\n- This is a single-file vanilla JS game. No TypeScript, no modules.\n- Match existing code style (var declarations, no semicolons inconsistency is existing).\n- Do not add comments or refactor surrounding code.",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Remove premature gameOver, throneDialogOpen, and dialog show from buildMarsThrone()",
+          "steps": [
+            "Open game.js and find buildMarsThrone() function (~line 1357)",
+            "Remove `state.gameOver = true;` (~line 1382)",
+            "Remove `state.throneDialogOpen = true;` (~line 1383)",
+            "Remove `document.getElementById(\"throne-dialog\").classList.remove(\"hidden\");` (~line 1384)",
+            "Verify the remaining function still sets marsThronePlaced, adds logs, and calls refreshView()"
+          ],
+          "passes": false
+        },
+        {
+          "id": "t2",
+          "description": "Verify sitOnThrone dialog sequence works end-to-end",
+          "steps": [
+            "Open game in browser",
+            "Build a Mars Throne — verify no dialog appears and game is not over",
+            "Move Elon adjacent to throne — verify 'Sit on the Mars Throne' button appears",
+            "Click sit button — verify dialog step 1: 'You are the king of Mars!'",
+            "Click Continue — verify dialog step 2: 'The throne is comfortable...'",
+            "Click Continue — verify dialog step 3: 'Elon's bones will sit on the Mars Throne forever. Game Over'",
+            "Click Restart — verify game restarts"
+          ],
+          "passes": false
+        }
+      ],
+      "quality_checklist": []
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": null,
+    "runCommand": null,
+    "appType": "web",
+    "port": null,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Mars Throne dialog displays the ending correctly",
+        "steps": [
+          "Open index.html in browser",
+          "Play through game to build Mars Throne",
+          "Verify building throne does NOT show a dialog or end the game",
+          "Move Elon to throne and click 'Sit on the Mars Throne'",
+          "Advance through all 3 dialog steps",
+          "Verify final message reads: 'Elon's bones will sit on the Mars Throne forever. Game Over'"
+        ],
+        "passes": false
+      }
+    ]
+  }
+}
