@@ -1691,9 +1691,9 @@
             // Shrinkage: 10% chance to remove a tile from one end
             if (Math.random() < 0.1 && storm.tiles.length > 1) {
                 if (Math.random() < 0.5) {
-                    storm.tiles.splice(0, 1);
+                    storm.tiles.shift();
                 } else {
-                    storm.tiles.splice(storm.tiles.length - 1, 1);
+                    storm.tiles.pop();
                 }
                 addLog("A Dust Storm shrank in size.", "storm");
             }
