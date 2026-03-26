@@ -1663,6 +1663,41 @@
                 else if (storm.direction === "west") tile.col--;
             }
 
+            // Growth: 20% chance to add a tile perpendicular to movement
+            if (Math.random() < 0.2) {
+                var perpAxis = (storm.direction === "north" || storm.direction === "south") ? "col" : "row";
+                var srcIdx = Math.floor(Math.random() * storm.tiles.length);
+                var srcTile = storm.tiles[srcIdx];
+                var offsets = Math.random() < 0.5 ? [1, -1] : [-1, 1];
+                for (var d = 0; d < 2; d++) {
+                    var candidateRow = srcTile.row + (perpAxis === "row" ? offsets[d] : 0);
+                    var candidateCol = srcTile.col + (perpAxis === "col" ? offsets[d] : 0);
+                    if (candidateRow < 0 || candidateRow >= MAP_ROWS || candidateCol < 0 || candidateCol >= MAP_COLS) continue;
+                    var duplicate = false;
+                    for (var k = 0; k < storm.tiles.length; k++) {
+                        if (storm.tiles[k].row === candidateRow && storm.tiles[k].col === candidateCol) {
+                            duplicate = true;
+                            break;
+                        }
+                    }
+                    if (!duplicate) {
+                        storm.tiles.push({row: candidateRow, col: candidateCol});
+                        addLog("A Dust Storm grew in size!", "storm");
+                        break;
+                    }
+                }
+            }
+
+            // Shrinkage: 10% chance to remove a tile from one end
+            if (Math.random() < 0.1 && storm.tiles.length > 1) {
+                if (Math.random() < 0.5) {
+                    storm.tiles.splice(0, 1);
+                } else {
+                    storm.tiles.splice(storm.tiles.length - 1, 1);
+                }
+                addLog("A Dust Storm shrank in size.", "storm");
+            }
+
             // Check if entirely off-map
             var allOffMap = true;
             for (var j = 0; j < storm.tiles.length; j++) {
