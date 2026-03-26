@@ -373,3 +373,7 @@ kbd {
 #game-log .log-entry.comm {
     color: #88ccff;
 }
+
+#game-log .log-entry.dust {
+    color: #b8860b;
+}

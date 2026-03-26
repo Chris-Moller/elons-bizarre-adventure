@@ -435,11 +435,31 @@
         ctx.lineWidth = 1;
         ctx.strokeRect(x + 4, y + 8, TILE_SIZE - 8, TILE_SIZE - 16);
 
+        // Dusty overlay
+        if (structure.dusty) {
+            ctx.fillStyle = "rgba(139, 90, 43, 0.55)";
+            ctx.fillRect(x + 4, y + 8, TILE_SIZE - 8, TILE_SIZE - 16);
+            // Dust stipple dots
+            ctx.fillStyle = "rgba(160, 110, 50, 0.7)";
+            for (var di = 0; di < 6; di++) {
+                var dx = x + 8 + (di % 3) * 8;
+                var dy = y + 12 + Math.floor(di / 3) * 8;
+                ctx.fillRect(dx, dy, 2, 2);
+            }
+        }
+
         // Label
-        ctx.fillStyle = "#66aaff";
-        ctx.font = "bold 6px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("SOLAR", x + TILE_SIZE / 2, y + TILE_SIZE - 1);
+        if (structure.dusty) {
+            ctx.fillStyle = "#8b5a2b";
+            ctx.font = "bold 6px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("DUSTY", x + TILE_SIZE / 2, y + TILE_SIZE - 1);
+        } else {
+            ctx.fillStyle = "#66aaff";
+            ctx.font = "bold 6px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("SOLAR", x + TILE_SIZE / 2, y + TILE_SIZE - 1);
+        }
     }
 
     function drawElonUnit(unit, isSelected) {
@@ -786,7 +806,8 @@
             ["build-solar-btn",    canBuildSolarPanel()],
             ["build-battery-btn",  canBuildSubparBattery()],
             ["build-rocktimus-btn", canBuildRocktimus()],
-            ["build-comm-dish-btn", canBuildCommDish()]
+            ["build-comm-dish-btn", canBuildCommDish()],
+            ["remove-dust-btn",    canRemoveDust()]
         ];
         var anyVisible = false;
         for (var i = 0; i < actions.length; i++) {
@@ -845,7 +866,7 @@
                 structureText = "Rock Hovel";
                 energyText = '<div><strong>Energy:</strong> ' + tileStructure.energy + ' / ' + getHovelCapacity(tileStructure) + '</div>';
             } else if (tileStructure.type === "solar_panel") {
-                structureText = "Solar Panel";
+                structureText = "Solar Panel" + (tileStructure.dusty ? " (Dusty)" : "");
             } else if (tileStructure.type === "subpar_battery") {
                 structureText = "Subpar Battery";
             } else if (tileStructure.type === "comm_dish") {
@@ -1001,10 +1022,37 @@
             type: "solar_panel",
             row: unit.row,
             col: unit.col,
+            dusty: false,
         });
 
         addLog(unit.name + " built a Solar Panel at (" + unit.col + ", " + unit.row + ")", "build");
 
+        refreshView();
+    }
+
+    function findDustySolarPanelNear(row, col) {
+        var onTile = getStructureAt(row, col);
+        if (onTile && onTile.type === "solar_panel" && onTile.dusty) return onTile;
+        var adjacent = getAdjacentStructures(row, col, "solar_panel");
+        for (var i = 0; i < adjacent.length; i++) {
+            if (adjacent[i].dusty) return adjacent[i];
+        }
+        return null;
+    }
+
+    function canRemoveDust() {
+        var unit = getSelectedUnit();
+        if (unit.movesLeft <= 0) return false;
+        return findDustySolarPanelNear(unit.row, unit.col) !== null;
+    }
+
+    function removeDust() {
+        if (!canRemoveDust()) return;
+        var unit = getSelectedUnit();
+        var panel = findDustySolarPanelNear(unit.row, unit.col);
+        panel.dusty = false;
+        unit.movesLeft--;
+        addLog(unit.name + " cleaned dust from a Solar Panel at (" + panel.col + ", " + panel.row + ")", "dust");
         refreshView();
     }
 
@@ -1279,7 +1327,7 @@
             if (panel.type !== "solar_panel") continue;
 
             // 50% chance to generate energy
-            if (Math.random() < 0.5) {
+            if (Math.random() < (panel.dusty ? 0.1 : 0.5)) {
                 var hovels = getAdjacentStructures(panel.row, panel.col, "rock_hovel");
                 for (var j = 0; j < hovels.length; j++) {
                     if (hovels[j].energy < getHovelCapacity(hovels[j])) {
@@ -1464,6 +1512,13 @@
                 if (state.selectedUnit >= state.units.length) {
                     state.selectedUnit = 0;
                 }
+
+                // Check if storm tile hits a solar panel
+                var stormStructure = getStructureAt(tile.row, tile.col);
+                if (stormStructure && stormStructure.type === "solar_panel" && !stormStructure.dusty) {
+                    stormStructure.dusty = true;
+                    addLog("A Solar Panel at (" + tile.col + ", " + tile.row + ") was covered in dust!", "dust");
+                }
             }
         }
     }
@@ -1617,6 +1672,10 @@
         if (state.gameOver) return;
         buildMarsThrone();
     });
+    document.getElementById("remove-dust-btn").addEventListener("click", function () {
+        if (state.gameOver) return;
+        removeDust();
+    });
     document.getElementById("close-hotkey-modal").addEventListener("click", toggleHotkeyModal);
 
     // Keyboard controls
@@ -1677,6 +1736,9 @@
                 return;
             case "m":
                 buildMarsThrone();
+                return;
+            case "x":
+                removeDust();
                 return;
             case "Tab":
                 e.preventDefault();
