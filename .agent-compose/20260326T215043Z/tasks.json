@@ -6,7 +6,7 @@
       "title": "Remove Comm Dish rock resource highlighting",
       "description": "Delete the getCommDishRevealedTiles() and drawCommDishOverlay() functions from game.js, and remove the call site in the render() function that invokes them. This removes the purposeless cyan overlay that highlights rock resources near Comm Dishes.",
       "acceptance_criteria": "1. The getCommDishRevealedTiles function no longer exists in game.js.\n2. The drawCommDishOverlay function no longer exists in game.js.\n3. The render() function no longer calls either of these functions.\n4. All other Comm Dish functionality (building, calling Earth, drawing the structure) remains intact.\n5. The game renders without errors.",
-      "claudeMd": "# Project Context\n\nYou are working on a single-file browser game (`game.js`, vanilla JS, no build system, no framework).\n\n## Task\n\nRemove the rock resource highlighting overlay from Comm Dishes. Three deletions needed:\n\n1. **Delete `getCommDishRevealedTiles()` function** (~lines 737–771) — BFS that finds rock tiles near comm dishes.\n2. **Delete `drawCommDishOverlay(revealedTiles)` function** (~lines 773–788) — Draws cyan overlay on revealed tiles.\n3. **Delete the call site in `render()`** (~lines 800–802):\n   ```js\n   // Draw Comm Dish rock reveal overlay\n   var revealedTiles = getCommDishRevealedTiles();\n   drawCommDishOverlay(revealedTiles);\n   ```\n\nDo NOT touch any other Comm Dish code (building, calling Earth, drawing the structure sprite).\n\n## Conventions\n- Vanilla JS, no modules, no build step\n- Match existing code style (var declarations, for loops, etc.)\n- No comments needed for deletions",
+      "claudeMd": "# Project Context\n\nYou are working on a single-file browser game (`game.js`, vanilla JS, no build system, no framework).\n\n## Task\n\nRemove the rock resource highlighting overlay from Comm Dishes. Three deletions needed:\n\n1. **Delete `getCommDishRevealedTiles()` function** (~lines 737\u2013771) \u2014 BFS that finds rock tiles near comm dishes.\n2. **Delete `drawCommDishOverlay(revealedTiles)` function** (~lines 773\u2013788) \u2014 Draws cyan overlay on revealed tiles.\n3. **Delete the call site in `render()`** (~lines 800\u2013802):\n   ```js\n   // Draw Comm Dish rock reveal overlay\n   var revealedTiles = getCommDishRevealedTiles();\n   drawCommDishOverlay(revealedTiles);\n   ```\n\nDo NOT touch any other Comm Dish code (building, calling Earth, drawing the structure sprite).\n\n## Conventions\n- Vanilla JS, no modules, no build step\n- Match existing code style (var declarations, for loops, etc.)\n- No comments needed for deletions",
       "checklist": [
         {
           "id": "t1",
@@ -16,7 +16,7 @@
             "Delete the entire function including the blank line after it",
             "Verify with grep that getCommDishRevealedTiles no longer appears in game.js"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t2",
@@ -26,7 +26,7 @@
             "Delete the entire function including the blank line after it",
             "Verify with grep that drawCommDishOverlay no longer appears in game.js"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t3",
@@ -36,7 +36,7 @@
             "Delete those 3 lines (comment + two function calls)",
             "Verify render() still has its other drawing code intact"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t4",
@@ -46,7 +46,7 @@
             "Confirm buildCommDish, canBuildCommDish, drawCommDish, getAdjacentCommDish, and callEarth functions still exist",
             "Confirm no syntax errors by checking the file can be parsed"
           ],
-          "passes": false
+          "passes": true
         }
       ],
       "quality_checklist": [
@@ -54,10 +54,10 @@
           "id": "q1",
           "description": "No dangling references to removed functions",
           "steps": [
-            "Grep game.js for getCommDishRevealedTiles — should have zero matches",
-            "Grep game.js for drawCommDishOverlay — should have zero matches"
+            "Grep game.js for getCommDishRevealedTiles \u2014 should have zero matches",
+            "Grep game.js for drawCommDishOverlay \u2014 should have zero matches"
           ],
-          "passes": false
+          "passes": true
         }
       ]
     }
