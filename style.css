@@ -506,3 +506,7 @@ kbd {
     background: linear-gradient(135deg, #dd6611, #bb4411);
     transform: scale(1.05);
 }
+
+#game-log .log-entry.dust {
+    color: #b8860b;
+}

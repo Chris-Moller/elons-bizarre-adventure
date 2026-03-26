@@ -1,0 +1,204 @@
+{
+  "quality": "full",
+  "tasks": [
+    {
+      "id": "main",
+      "title": "Add dusty solar panel mechanic with Remove Dust action",
+      "description": "Implement the full 'dusty solar panel' feature: dust storms make solar panels dusty (10% energy), visual dust overlay, Remove Dust action with hotkey, tile info display, and logging.",
+      "acceptance_criteria": "1. Dust storm tiles overlapping a Solar Panel set it to dusty state.\n2. Dusty panels have 10% energy generation (not 50%).\n3. Dusty panels are visually distinct (muted colors + dust overlay).\n4. 'Remove Dust' action available to any unit on or adjacent to a dusty Solar Panel.\n5. Remove Dust restores normal energy production.\n6. Remove Dust costs 1 move.\n7. Hotkey X assigned and added to hotkey modal.\n8. Button shown/hidden per 'Hide Unusable Actions' pattern.\n9. Log entries for becoming dusty and for dust removal.\n10. Tile info panel shows dusty status.",
+      "claudeMd": "# Project Context\n\nYou are implementing the 'dusty solar panel' feature in a single-file vanilla JS browser game.\n\n## Tech Stack\n- Pure vanilla JS (game.js ~1730 lines), HTML (index.html), CSS (style.css)\n- No build system, no framework, no package.json\n- Canvas-based rendering (2D context)\n- All game logic in a single IIFE in game.js\n\n## Architecture\n- `state.structures` array holds structures with `{ type, row, col, ... }` \u2014 solar panels are `{ type: 'solar_panel', row, col }`\n- Add `dusty: false` property to solar panel structures\n- `state.dustStorms` array holds storms with `{ id, tiles: [{row, col}], direction }`\n- `checkDustStormCollisions()` (line ~1426) iterates storms and checks overlapping units \u2014 add solar panel dustification here\n- `processSolarPanels()` (line ~1275) uses `Math.random() < 0.5` for energy \u2014 change to `< 0.1` when dusty\n- `drawSolarPanel(structure)` (line ~392) renders panels \u2014 add dust overlay when `structure.dusty`\n- `updateUI()` (line ~760) manages action button visibility using a pattern: array of `[buttonId, canDoAction()]`, buttons get `display: none` when disabled. Follow this exact pattern.\n- `updateTileInfo()` (line ~830) shows tile details \u2014 append '(Dusty)' to Solar Panel label\n- Hotkey handler is a `switch(e.key)` at line ~1640 \u2014 add `case 'x':`\n- Button click listeners are registered around line ~1586\n\n## Conventions\n- Use `var` (not `let/const`) for new function-scoped variables (match existing style in action functions)\n- Use `function name()` declarations (not arrows) for new functions\n- Log entries use `addLog(message, type)` \u2014 use type `'dust'` for dust events\n- Action pattern: `canXxx()` returns boolean, `xxx()` performs action with guard `if (!canXxx()) return;`\n- Button IDs follow pattern: `verb-noun-btn` (e.g., `remove-dust-btn`)\n- CSS log entry classes: `#game-log .log-entry.dust`\n\n## Implementation Checklist\n\n### 1. game.js \u2014 Add dusty property to solar panels\n- In `buildSolarPanel()` (~line 1000), add `dusty: false` to the structure object\n- In `checkDustStormCollisions()` (~line 1426), after the unit collision loop for each storm tile, add a structure check: if `getStructureAt(tile.row, tile.col)` is a solar panel and not already dusty, set `dusty = true` and call `addLog(..., 'dust')`\n\n### 2. game.js \u2014 Reduce dusty panel energy generation\n- In `processSolarPanels()` (~line 1282), change `Math.random() < 0.5` to `Math.random() < (panel.dusty ? 0.1 : 0.5)`\n\n### 3. game.js \u2014 Draw dusty overlay\n- In `drawSolarPanel(structure)` (~line 392), after all normal drawing, if `structure.dusty`:\n  - Draw a semi-transparent brown overlay: `ctx.fillStyle = 'rgba(139, 90, 43, 0.55)'; ctx.fillRect(x+4, y+8, TILE_SIZE-8, TILE_SIZE-16);`\n  - Draw small dust dots/stipples for visual texture\n  - Change the label color to a muted brown and text to 'DUSTY'\n\n### 4. game.js \u2014 canRemoveDust() and removeDust()\n- `canRemoveDust()`: return true if selected unit has movesLeft > 0 AND there exists a dusty solar panel at the unit's position OR adjacent (use `getStructureAt` for on-tile, `getAdjacentStructures` pattern for adjacent)\n- `removeDust()`: find the dusty panel (on or adjacent), set `dusty = false`, decrement `unit.movesLeft`, log it, call `refreshView()`\n- Helper: `findDustySolarPanelNear(row, col)` \u2014 checks on-tile first, then adjacent tiles for a dusty solar panel\n\n### 5. index.html \u2014 Add button and hotkey row\n- Add `<button id=\"remove-dust-btn\" class=\"action-btn\" disabled>Remove Dust (1 move)</button>` after the build-throne-btn\n- Add `<tr><td><kbd>X</kbd></td><td>Remove Dust</td></tr>` in the hotkey table before the Tab row\n\n### 6. game.js \u2014 Wire up UI\n- In `updateUI()`, add `['remove-dust-btn', canRemoveDust()]` to the actions array (before the special Call Earth / Throne handling, around line 789)\n- Add click listener: `document.getElementById('remove-dust-btn').addEventListener('click', function() { if (state.gameOver) return; removeDust(); });`\n- Add keyboard case: `case 'x': removeDust(); return;`\n\n### 7. game.js \u2014 Tile info\n- In `updateTileInfo()`, where `tileStructure.type === 'solar_panel'` (~line 847), change to: `structureText = 'Solar Panel' + (tileStructure.dusty ? ' (Dusty)' : '');`\n\n### 8. style.css \u2014 Dust log styling\n- Add: `#game-log .log-entry.dust { color: #b8860b; }` (dark goldenrod, sandy/dusty feel)\n\n## Gotchas\n- The `checkDustStormCollisions()` function iterates storm tiles that may be off-map (negative coords) \u2014 the existing code already has bounds checking (`if (tile.row < 0 || ...`) so your structure check will naturally be inside that guard\n- Solar panels don't have an `energy` property (only hovels do) \u2014 don't confuse the two\n- The existing `getAdjacentStructures(row, col, type)` returns structures of a specific type adjacent to a position (excludes the position itself). For on-tile, use `getStructureAt(row, col)` separately\n- When multiple dusty panels are adjacent, `removeDust()` should clean the first one found (on-tile takes priority)\n- The `init()` function doesn't need changes \u2014 new solar panels built after init already get `dusty: false`",
+      "checklist": [
+        {
+          "id": "t1",
+          "description": "Solar panels gain dusty:false property when built and become dusty when overlapped by dust storm",
+          "steps": [
+            "Add dusty: false to the structure object in buildSolarPanel()",
+            "In checkDustStormCollisions(), after unit checks per storm tile, check if getStructureAt(tile.row, tile.col) is a non-dusty solar_panel and set dusty=true with log",
+            "Verify by reading the code that the dusty flag is set correctly"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t2",
+          "description": "Dusty solar panels have 10% energy generation instead of 50%",
+          "steps": [
+            "In processSolarPanels(), change Math.random() < 0.5 to Math.random() < (panel.dusty ? 0.1 : 0.5)",
+            "Verify the conditional is correctly placed"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t3",
+          "description": "Dusty solar panels are visually distinct with muted colors and dust overlay",
+          "steps": [
+            "In drawSolarPanel(), after normal rendering, add conditional block for structure.dusty",
+            "Draw semi-transparent brown overlay over the panel area",
+            "Add dust stipple dots for visual texture",
+            "Change label to 'DUSTY' with muted color"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t4",
+          "description": "canRemoveDust() and removeDust() functions implement the action correctly",
+          "steps": [
+            "Create findDustySolarPanelNear(row, col) helper that checks on-tile then adjacent",
+            "Create canRemoveDust() that checks unit.movesLeft > 0 and findDustySolarPanelNear returns a panel",
+            "Create removeDust() that sets panel.dusty=false, costs 1 move, logs, and refreshes",
+            "Verify removeDust() has guard: if (!canRemoveDust()) return"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t5",
+          "description": "Remove Dust button in HTML and wired up with click listener",
+          "steps": [
+            "Add <button id='remove-dust-btn'> in index.html action panel",
+            "Add click event listener in game.js matching existing pattern",
+            "Verify button follows same HTML structure as other action buttons"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t6",
+          "description": "Remove Dust button shown/hidden following Hide Unusable Actions pattern",
+          "steps": [
+            "Add ['remove-dust-btn', canRemoveDust()] to the actions array in updateUI()",
+            "Verify it is included in the anyVisible tracking"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t7",
+          "description": "Hotkey X triggers Remove Dust and is listed in hotkey modal",
+          "steps": [
+            "Add case 'x': removeDust(); return; in keydown switch",
+            "Add <tr><td><kbd>X</kbd></td><td>Remove Dust</td></tr> in hotkey table in index.html",
+            "Verify placement is before the Tab/Cycle units row"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t8",
+          "description": "Log entries created for dusty and clean events",
+          "steps": [
+            "Verify addLog call in checkDustStormCollisions when panel becomes dusty uses type 'dust'",
+            "Verify addLog call in removeDust() when panel is cleaned uses type 'dust'",
+            "Add CSS class #game-log .log-entry.dust with sandy/goldenrod color in style.css"
+          ],
+          "passes": true
+        },
+        {
+          "id": "t9",
+          "description": "Tile info panel shows dusty status for Solar Panels",
+          "steps": [
+            "In updateTileInfo(), change solar_panel case to append ' (Dusty)' when tileStructure.dusty is true",
+            "Verify the info updates correctly for both dusty and clean panels"
+          ],
+          "passes": true
+        }
+      ],
+      "quality_checklist": [
+        {
+          "id": "q1",
+          "description": "New code follows existing codebase conventions (var, function declarations, naming patterns)",
+          "steps": [
+            "Check that new functions use var (not let/const) for local variables",
+            "Check that new functions are declared with function keyword (not arrows)",
+            "Check that button ID follows verb-noun-btn pattern",
+            "Check that canXxx/xxx action pattern is followed"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q2",
+          "description": "No redundant or dead code introduced",
+          "steps": [
+            "Check that findDustySolarPanelNear is used by both canRemoveDust and removeDust (not duplicated logic)",
+            "Check no unused variables or imports were added",
+            "Check that dusty:false is only added in buildSolarPanel, not redundantly elsewhere"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q3",
+          "description": "Visual rendering is clean and doesn't break existing solar panel or dust storm rendering",
+          "steps": [
+            "Check that dusty overlay is drawn after normal panel rendering (correct z-order)",
+            "Check that dust storm rendering (drawDustStorm) is not affected",
+            "Check that the overlay coordinates match the panel area exactly"
+          ],
+          "passes": true
+        },
+        {
+          "id": "q4",
+          "description": "Edge cases handled: off-map storm tiles, already-dusty panels, no adjacent panels",
+          "steps": [
+            "Check that checkDustStormCollisions bounds-checks before getStructureAt",
+            "Check that already-dusty panels don't get double-logged",
+            "Check that canRemoveDust returns false when no dusty panel nearby"
+          ],
+          "passes": true
+        }
+      ]
+    }
+  ],
+  "integration": null,
+  "verification": {
+    "buildCommand": null,
+    "runCommand": "python3 -m http.server 3000",
+    "readySignal": "Serving HTTP",
+    "appType": "web",
+    "port": 3000,
+    "checks": [
+      {
+        "id": "v1",
+        "description": "Solar panel becomes dusty when dust storm passes over it",
+        "steps": [
+          "Open app in browser",
+          "Build a Rock Hovel and Solar Panel",
+          "Wait for a dust storm to pass over the solar panel (or inspect code logic)",
+          "Verify the solar panel visually changes to show dust overlay",
+          "Verify tile info shows 'Solar Panel (Dusty)' when clicking the panel",
+          "Verify a log entry appears about the panel becoming dusty"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v2",
+        "description": "Remove Dust action works and restores panel",
+        "steps": [
+          "With a dusty solar panel, move a unit onto or adjacent to it",
+          "Verify 'Remove Dust' button appears and is enabled",
+          "Click 'Remove Dust' button",
+          "Verify the panel visual returns to normal",
+          "Verify unit lost 1 move",
+          "Verify log entry about dust removal",
+          "Verify tile info no longer shows '(Dusty)'"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v3",
+        "description": "Hotkey X triggers Remove Dust and appears in hotkey modal",
+        "steps": [
+          "Press ESC to open hotkey modal",
+          "Verify 'X \u2014 Remove Dust' row is present",
+          "Close modal, position unit on dusty panel",
+          "Press X key",
+          "Verify dust is removed"
+        ],
+        "passes": false
+      },
+      {
+        "id": "v4",
+        "description": "Remove Dust button is hidden when not applicable",
+        "steps": [
+          "With no dusty panels nearby, verify Remove Dust button is hidden",
+          "With unit having 0 moves left, verify Remove Dust button is hidden even if near dusty panel"
+        ],
+        "passes": false
+      }
+    ]
+  }
+}
