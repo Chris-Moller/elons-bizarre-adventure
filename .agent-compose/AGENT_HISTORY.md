@@ -94,3 +94,10 @@
 - **quality_checklist**: 4 items verified (q1, q2, q3, q4 — all pass)
 - **Reviews**: code quality (1 issue fixed: duplicate canCallEarth/callEarth definitions from conflict resolution), error handling (clean — synchronous codebase), test coverage (adequate — no test infra project-wide)
 - **Outcome**: success / exit_signal: true
+
+## conflict-resolver — 2026-03-26T21:01:45Z
+
+- **Conflict**: game.js (1 region: sit-throne-btn vs remove-dust-btn listeners), index.html (1 region: sit-throne-btn vs remove-dust-btn buttons), style.css (1 region: throne/intro dialog CSS vs dust log entry CSS), game.js (1 region: greenhouse construction vs duplicate stub removal)
+- **Resolution**: Kept both sides in all cases — added both button listeners in game.js, both buttons in index.html, all CSS from both sides in style.css, kept greenhouse code from HEAD in second game.js conflict
+- **Tests run**: yes — node --check game.js passed
+- **Outcome**: success
