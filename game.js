@@ -1237,7 +1237,10 @@
     function getAdjacentCommDish(unit) {
         // Check if unit is on a comm dish
         var onDish = getStructureAt(unit.row, unit.col);
-        if (onDish && onDish.type === "comm_dish") return onDish;
+        if (onDish && onDish.type === "comm_dish") {
+            var onDishKey = onDish.row + "," + onDish.col;
+            if (state.commDishesUsedThisTurn.indexOf(onDishKey) === -1) return onDish;
+        }
         // Check adjacent tiles
         for (var dr = -1; dr <= 1; dr++) {
             for (var dc = -1; dc <= 1; dc++) {
@@ -1246,7 +1249,10 @@
                 var nc = unit.col + dc;
                 if (!isInBounds(nr, nc)) continue;
                 var s = getStructureAt(nr, nc);
-                if (s && s.type === "comm_dish") return s;
+                if (s && s.type === "comm_dish") {
+                    var dishKey = s.row + "," + s.col;
+                    if (state.commDishesUsedThisTurn.indexOf(dishKey) === -1) return s;
+                }
             }
         }
         return null;
@@ -1269,7 +1275,7 @@
         var dishKey = dish.row + "," + dish.col;
         state.commDishesUsedThisTurn.push(dishKey);
 
-        var success = Math.random() < 0.01;
+        var success = Math.random() < 0.05;
         var dialogEl = document.getElementById("call-earth-dialog");
         var msgEl = document.getElementById("call-earth-message");
 
