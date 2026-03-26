@@ -519,17 +519,10 @@
         }
 
         // Label
-        if (structure.dusty) {
-            ctx.fillStyle = "#8b5a2b";
-            ctx.font = "bold 6px sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText("DUSTY", x + TILE_SIZE / 2, y + TILE_SIZE - 1);
-        } else {
-            ctx.fillStyle = "#66aaff";
-            ctx.font = "bold 6px sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText("SOLAR", x + TILE_SIZE / 2, y + TILE_SIZE - 1);
-        }
+        ctx.fillStyle = structure.dusty ? "#8b5a2b" : "#66aaff";
+        ctx.font = "bold 6px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(structure.dusty ? "DUSTY" : "SOLAR", x + TILE_SIZE / 2, y + TILE_SIZE - 1);
     }
 
     function drawElonUnit(unit, isSelected) {
