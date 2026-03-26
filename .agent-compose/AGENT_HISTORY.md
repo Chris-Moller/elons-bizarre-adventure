@@ -124,3 +124,9 @@
 - **Summary**: Removed redundant used-dish check in canCallEarth — getAdjacentCommDish already filters out used dishes, so the duplicate indexOf check was unnecessary
 - **Tests run**: yes — node --check game.js passed (syntax valid)
 - **Outcome**: success
+
+## reviewer — 2026-03-26T21:30:00Z
+- **Summary**: clean — no critical issues found across code quality, error handling, and test coverage
+- **quality_checklist**: 3 items verified (q1, q2, q3 — all pass)
+- **Reviews**: code quality (clean — all 5 acceptance criteria satisfied, conventions followed, TOCTOU concern is non-issue in single-threaded JS), error handling (clean — synchronous codebase, guard patterns consistent with rest of codebase), test coverage (adequate — no test infra project-wide, consistent with all prior features)
+- **Outcome**: success / exit_signal: true
