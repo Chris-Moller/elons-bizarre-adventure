@@ -116,3 +116,10 @@
 - **Summary**: clean — no critical issues found across code quality, error handling, and test coverage
 - **quality_checklist**: 3 items verified (q1, q2, q3 — all pass)
 - **Outcome**: success / exit_signal: true
+
+## conflict-resolver — 2026-03-26T21:21:28Z
+
+- **Conflict**: .agent-compose/current (1 region), .agent-compose/AGENT_HISTORY.md (1 region) — agent artifact files only, no code conflicts
+- **Resolution**: Accepted theirs for both agent artifact files
+- **Tests run**: none — no code conflicts, skipped per instructions
+- **Outcome**: success
