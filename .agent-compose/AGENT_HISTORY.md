@@ -83,3 +83,8 @@
 - **Items completed**: t1, t2, t3, t4, t5, t6, q1, q2, q3
 - **Tests run**: yes — HTTP server responds 200; no automated test suite exists
 - **Outcome**: success
+
+## simplifier — 2026-03-26T20:45:00Z
+- **Summary**: Reviewed X key dismiss feature (dismissIntroDialog, dismissThroneDialog, X key handler, HTML dialog markup, hotkey table entry) — code is already clear, minimal, and follows existing conventions
+- **Tests run**: yes — node --check game.js passed (syntax valid)
+- **Outcome**: nothing to simplify
