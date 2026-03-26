@@ -99,3 +99,10 @@
 - **Summary**: issues fixed — removed duplicate canCallEarth/callEarth (kept original that opens dialog), restored canvas click handler dialog guards, added introDialogOpen guard to ESC handler, removed duplicate state.contactedEarth in init(), updated call-earth dialog hint to mention X shortcut
 - **quality_checklist**: 3 items verified (q1, q2, q3 — all pass)
 - **Outcome**: success / exit_signal: true
+
+## conflict-resolver — 2026-03-26T20:47:59Z
+
+- **Conflict**: game.js (7 conflict regions across 2 commits), index.html (2 conflict regions), .agent-compose/ artifacts
+- **Resolution**: Kept Greenhouse feature from upstream; merged intro/throne dialog improvements (HEAD's richer text + incoming's X key dismiss); kept introAnimationPlaying guards from upstream; merged canvas click handler dialog guards from both sides; accepted theirs for agent artifact files
+- **Tests run**: none found — no automated test suite exists
+- **Outcome**: success
