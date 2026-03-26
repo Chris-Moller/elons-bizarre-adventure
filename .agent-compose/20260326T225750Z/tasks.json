@@ -18,7 +18,7 @@
             "Remove `document.getElementById(\"throne-dialog\").classList.remove(\"hidden\");` (~line 1384)",
             "Verify the remaining function still sets marsThronePlaced, adds logs, and calls refreshView()"
           ],
-          "passes": false
+          "passes": true
         },
         {
           "id": "t2",
@@ -32,7 +32,7 @@
             "Click Continue — verify dialog step 3: 'Elon's bones will sit on the Mars Throne forever. Game Over'",
             "Click Restart — verify game restarts"
           ],
-          "passes": false
+          "passes": true
         }
       ],
       "quality_checklist": []
